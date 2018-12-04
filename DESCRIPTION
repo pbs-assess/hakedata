@@ -1,0 +1,11 @@
+Package: hakedata
+Version: 0.0.0.9000
+Title: Data Extraction for Pacific Hake Assessment
+Description: Facilitates data extraction for Pacific hake multinational assessment.
+Authors@R: person("Chris", "Grandin", email = "chris.grandin@gmail.com", role = c("aut", "cre"))
+License: GPL (>=2)
+Encoding: UTF-8
+LazyData: true
+ByteCompile: true
+Imports:
+  gfplot
