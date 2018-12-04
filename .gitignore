@@ -1,0 +1,13 @@
+.Rbuildignore
+.RData
+.RHistory
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Rapp.history
+.here
+*.Rproj
+*.pdf
+*.png
+*.rds
