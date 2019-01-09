@@ -42,26 +42,26 @@ fishery_enum <- function(){
        all = "All")
 }
 
-#' get_catch
+#' catch_by_day
 #'
 #' @param d a list of data retrieved using gfplot package functions
 #' @param major_areas a vector of major stat areas as strings. e.g. "01" is 4B Strait of Georgia
 #' @param fishery the fishery to return the catch for. Default is all records. Uses the fishery_enum
 #'   function as an enumerator to shorten names.
 #' @param include_juandefuca Include the minor area of Juan De Fuca Strait which is located in major area 4B
-#' @return the catch data frame
+#' @return the catch data frame by year, month, and day
 #' @export
 #' @importFrom dplyr mutate group_by summarize filter bind_rows
 #' @importFrom lubridate month day year
 #' @examples
 #' fetch_data()
 #' d <- load_data()
-#' ct <- get_catch(d)
-#' ct.ft <- get_catch(d, fishery = fishery_enum()$ft)
-get_catch <- function(d,
-                      major_areas = hakedata::major_hake_areas,
-                      fishery = fishery_enum()$all,
-                      include_juandefuca = TRUE){
+#' ct <- catch_by_day(d)
+#' ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft)
+catch_by_day <- function(d,
+                         major_areas = hakedata::major_hake_areas,
+                         fishery = fishery_enum()$all,
+                         include_juandefuca = TRUE){
 
   if(fishery == fishery_enum()$ss){
     ct <- d$catch %>%
@@ -87,15 +87,16 @@ get_catch <- function(d,
                     minor_stat_area_code == "20" &
                     gear == "MIDWATER TRAWL")
 
-    d_out <- bind_rows(d_out, d_juandefuca) %>%
-      mutate(year = year(best_date),
-             month = month(best_date)) %>%
-      group_by(year, month) %>%
-      summarize(total_catch = sum(landed_kg + discarded_kg),
-                num_landings = n()) %>%
-      dplyr::ungroup()
+    d_out <- bind_rows(d_out, d_juandefuca)
   }
-  d_out
+  d_out %>%
+    mutate(year = year(best_date),
+           month = month(best_date),
+           day = day(best_date)) %>%
+    group_by(year, month, day) %>%
+    summarize(total_catch = sum(landed_kg + discarded_kg),
+              num_landings = n()) %>%
+    dplyr::ungroup()
 }
 
 get_comm_samples <- function(d,
