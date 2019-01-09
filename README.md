@@ -9,10 +9,10 @@ To load the data from the RDS file into an R workspace:
 `d <- load_data()`
 
 To get the Freezer Trawler catch:
-`ft_catch <- get_catch()`
+`ft_catch <- get_catch(d)`
 
 To get the Shoreside catch:
-`ss_catch <- get_catch(vessels.include = FALSE)`
+`ss_catch <- get_catch(d, vessels.include = FALSE)`
 
 
 If you want to add a new constant to the package, edit **R/generate-package-constants.R**

@@ -9,7 +9,7 @@
 fetch_data <- function(file = file.path(here::here("generated-data"),
                                         paste0(gsub(" ",
                                                     "-",
-                                                    species_name),
+                                                    hakedata::species_name),
                                                ".rds"))){
   d <- list()
   d$commercial_samples <- gfplot::get_commercial_samples(species_name)
@@ -30,64 +30,95 @@ fetch_data <- function(file = file.path(here::here("generated-data"),
 load_data <- function(file = file.path(here::here("generated-data"),
                                         paste0(gsub(" ",
                                                     "-",
-                                                    species_name),
+                                                    hakedata::species_name),
                                                ".rds"))){
   readRDS(file)
+}
+
+fishery_enum <- function(){
+  list(jv = "JV",
+       ss = "Shoreside",
+       ft = "Freezer Trawlers",
+       all = "All")
 }
 
 #' get_catch
 #'
 #' @param d a list of data retrieved using gfplot package functions
 #' @param major_areas a vector of major stat areas as strings. e.g. "01" is 4B Strait of Georgia
-#' @param vessels a data frame of vessel names (Vessel) and registration numbers (ID) to either
-#'   include or exclude. If NA, all vessels will be included and vessels.include will be ignored
-#' @param vessels.include if TRUE data for vessels in the vessels argument will be returned, if FALSE
-#'   data for vessels other than those given will be returned
-#'
-#' @return the modified catch data frame
+#' @param fishery the fishery to return the catch for. Default is all records. Uses the fishery_enum
+#'   function as an enumerator to shorten names.
+#' @param include_juandefuca Include the minor area of Juan De Fuca Strait which is located in major area 4B
+#' @return the catch data frame
 #' @export
 #' @importFrom dplyr mutate group_by summarize filter bind_rows
 #' @importFrom lubridate month day year
+#' @examples
+#' fetch_data()
+#' d <- load_data()
+#' ct <- get_catch(d)
+#' ct.ft <- get_catch(d, fishery = fishery_enum()$ft)
 get_catch <- function(d,
-                      major_areas = major_hake_areas,
-                      vessels = ft,
-                      vessels.include = TRUE){
+                      major_areas = hakedata::major_hake_areas,
+                      fishery = fishery_enum()$all,
+                      include_juandefuca = TRUE){
 
-  ## Filter by vessel
-  ifelse(!is.na(vessels),{
-    ifelse(vessels.include,{
-      d$catch <- d$catch %>%
-        dplyr::filter(vessel_registration_number %in% vessels$ID)
-    },{
-      d$catch <- d$catch %>%
-        dplyr::filter(!vessel_registration_number %in% vessels$ID)
-    })
-  }, NULL)
+  if(fishery == fishery_enum()$ss){
+    ct <- d$catch %>%
+      dplyr::filter(!vessel_registration_number %in% hakedata::ft$FOS.ID)
+  }else if(fishery == fishery_enum()$ft){
+    ct <- d$catch %>%
+      dplyr::filter(vessel_registration_number %in% hakedata::ft$FOS.ID)
+  }else if(fishery == fishery_enum()$jv){
+    ct <- d$catch %>% dplyr::filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
+  }else{ ## Assume catch from all fisheries
+    ct <- d$catch
+  }
 
-  d_majors <- d$catch %>%
+  d_out <- ct %>%
     dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
                   major_stat_area_code %in% major_areas &
                   gear == "MIDWATER TRAWL")
 
-  ## For hake, include the Strait of Juan De Fuca, even though its major area is 4B
-  d_juandefuca <- d$catch %>%
-    dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
-                  major_stat_area_code == "01" &
-                  gear == "MIDWATER TRAWL" &
-                  minor_stat_area_code == "20" &
-                  gear == "MIDWATER TRAWL")
+  if(include_juandefuca){
+    d_juandefuca <- ct %>%
+      dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
+                    major_stat_area_code == "01" &
+                    minor_stat_area_code == "20" &
+                    gear == "MIDWATER TRAWL")
 
-  bind_rows(d_majors, d_juandefuca) %>%
-    mutate(year = year(best_date),
-           month = month(best_date)) %>%
-    group_by(year, month) %>%
-    summarize(total_catch = sum(landed_kg + discarded_kg),
-              num_landings = n())
+    d_out <- bind_rows(d_out, d_juandefuca) %>%
+      mutate(year = year(best_date),
+             month = month(best_date)) %>%
+      group_by(year, month) %>%
+      summarize(total_catch = sum(landed_kg + discarded_kg),
+                num_landings = n()) %>%
+      dplyr::ungroup()
+  }
+  d_out
 }
 
-get_comm_samples <- function(d){
-  x=d$commercial_samples
-  browser()
+get_comm_samples <- function(d,
+                             major_areas = hakedata::major_hake_areas,
+                             include_juandefuca = TRUE){
+  cs <- d$commercial_samples
+  d_out <- cs %>%
+    dplyr::filter(major_stat_area_code %in% major_areas)
+
+  if(include_juandefuca){
+    d_juandefuca <- cs %>%
+      dplyr::filter(major_stat_area_code == "01" &
+                    minor_stat_area_code == "20")
+
+    d_out <- bind_rows(d_out, d_juandefuca) %>%
+      mutate(year = year(best_date),
+             month = month(best_date)) %>%
+      group_by(year, month) %>%
+      summarize(total_catch = sum(landed_kg + discarded_kg),
+                num_landings = n()) %>%
+      dplyr::ungroup()
+  }
+  d_out
 }
 
 #' get_alw
