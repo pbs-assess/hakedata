@@ -35,6 +35,15 @@ load_data <- function(file = file.path(here::here("generated-data"),
   readRDS(file)
 }
 
+#' fishery_enum
+#'
+#' An enumeration function used to generalize code used in other functions
+#'
+#' @return A character astring representing the fishery
+#' @export
+#'
+#' @examples
+#' fishery_enum()$ft
 fishery_enum <- function(){
   list(jv = "JV",
        ss = "Shoreside",
