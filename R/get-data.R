@@ -42,6 +42,43 @@ fishery_enum <- function(){
        all = "All")
 }
 
+get_catch <- function(d,
+                      major_areas = hakedata::major_hake_areas,
+                      fishery = fishery_enum()$all,
+                      include_juandefuca = TRUE){
+  if(fishery == fishery_enum()$ss){
+    ct <- d$catch %>%
+      dplyr::filter(!vessel_registration_number %in% hakedata::ft$FOS.ID)
+  }else if(fishery == fishery_enum()$ft){
+    ct <- d$catch %>%
+      dplyr::filter(vessel_registration_number %in% hakedata::ft$FOS.ID)
+  }else if(fishery == fishery_enum()$jv){
+    ct <- d$catch %>% dplyr::filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
+  }else{ ## Assume catch from all fisheries
+    ct <- d$catch
+  }
+
+  d_out <- ct %>%
+    dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
+                  major_stat_area_code %in% major_areas &
+                  gear == "MIDWATER TRAWL")
+
+  if(include_juandefuca){
+    d_juandefuca <- ct %>%
+      dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
+                    major_stat_area_code == "01" &
+                    minor_stat_area_code == "20" &
+                    gear == "MIDWATER TRAWL")
+
+    d_out <- bind_rows(d_out, d_juandefuca)
+  }
+  d_out %>%
+    group_by(best_date) %>%
+    summarize(total_catch = sum(landed_kg + discarded_kg),
+              num_landings = n()) %>%
+    dplyr::ungroup()
+}
+
 #' catch_by_day
 #'
 #' @param d a list of data retrieved using gfplot package functions
@@ -90,10 +127,7 @@ catch_by_day <- function(d,
     d_out <- bind_rows(d_out, d_juandefuca)
   }
   d_out %>%
-    mutate(year = year(best_date),
-           month = month(best_date),
-           day = day(best_date)) %>%
-    group_by(year, month, day) %>%
+    group_by(best_date) %>%
     summarize(total_catch = sum(landed_kg + discarded_kg),
               num_landings = n()) %>%
     dplyr::ungroup()
@@ -135,4 +169,19 @@ get_alw <- function(d){
     mutate(year = year(trip_start_date)) %>%
     transmute(year, age, length, weight)
   browser()
+}
+
+.onAttach <- function(pkgname, libname) {
+  ggplot2::theme_set(gfplot::theme_pbs())
+  sensitivity_colors <- c("#000000", RColorBrewer::brewer.pal(8L, "Dark2"))
+  assign("scale_colour_continuous", ggplot2::scale_colour_viridis_c)
+  assign("scale_fill_continuous", ggplot2::scale_fill_viridis_c)
+  assign("scale_colour_discrete",
+         function(..., values = sensitivity_colors)
+           scale_colour_manual(..., values = values),
+         globalenv())
+  assign("scale_fill_discrete",
+         function(..., values = sensitivity_colors)
+           scale_fill_manual(..., values = values),
+         globalenv())
 }
