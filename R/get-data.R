@@ -62,7 +62,7 @@ fishery_enum <- function(){
 #' @param include_juandefuca Include the minor area of Juan De Fuca Strait which is located in major area 4B
 #' @return the catch data frame
 #' @export
-#' @importFrom dplyr mutate group_by summarize filter bind_rows
+#' @importFrom dplyr mutate group_by summarize filter bind_rows ungroup
 #' @importFrom lubridate month day year
 #' @examples
 #' fetch_data()
@@ -104,7 +104,7 @@ catch_by_day <- function(d,
     group_by(best_date) %>%
     summarize(total_catch = sum(landed_kg + discarded_kg),
               num_landings = n()) %>%
-    dplyr::ungroup()
+    ungroup()
 }
 
 get_comm_samples <- function(d,
@@ -125,7 +125,7 @@ get_comm_samples <- function(d,
       group_by(year, month) %>%
       summarize(total_catch = sum(landed_kg + discarded_kg),
                 num_landings = n()) %>%
-      dplyr::ungroup()
+      ungroup()
   }
   d_out
 }

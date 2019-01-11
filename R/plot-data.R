@@ -18,10 +18,10 @@
 #' n <-18
 #' plot(data.frame(1:n, 1), col = plot_color(n), pch = 19, cex = 5)
 plot_color <- function(n.cols = 10) {
-  base <- RColorBrewer::brewer.pal(name = "Set1", n = 9)
+  base <- brewer.pal(name = "Set1", n = 9)
   colors <- c(base[(n.cols - 1):1], "#000000")
   if (n.cols > 10 & n.cols < 18) {
-    extra <- RColorBrewer::brewer.pal(name = "Set2", n = 7)
+    extra <- brewer.pal(name = "Set2", n = 7)
     colors <- c(extra[(n.cols - 10):1], rev(base), "#000000")
   }
   if (n.cols >= 18) stop(n.cols, " is too many colors, only 17 are allowed.")
@@ -40,6 +40,9 @@ plot_color <- function(n.cols = 10) {
 #'
 #' @return A ggplot object
 #' @export
+#' @importFrom ggplot2 aes geom_point scale_color_manual theme element_blank
+#'  element_text element_rect scale_y_continuous scale_x_continuous ylab xlab
+#'  geom_hline
 #'
 #' @examples
 #' d <- load_data()
@@ -87,23 +90,23 @@ plot_cumu_catch <- function(d,
   colors <- plot_color(length(unique(d$year)))
 
   g <- ggplot2::ggplot(d) +
-    ggplot2::aes(x = day, y = cumu_catch, color = year) +
-    ggplot2::geom_point() +
-    ggplot2::scale_color_manual(values = colors) +
-    ggplot2::theme(legend.position = c(0, 1),
-                   legend.justification = c(-0.2, 1.15),
-                   legend.title = ggplot2::element_blank(),
-                   legend.text = ggplot2::element_text(size = 12),
-                   legend.background = ggplot2::element_rect(fill = "white")) +
-    ggplot2::scale_y_continuous(labels = scales::comma,
-                                limits = ylim) +
-    ggplot2::scale_x_continuous(breaks = x.ticks,
-                                labels = mon) +
-    ggplot2::ylab("Cumulative landings (thousand mt)") +
-    ggplot2::xlab("Month")
+    aes(x = day, y = cumu_catch, color = year) +
+    geom_point() +
+    scale_color_manual(values = colors) +
+    theme(legend.position = c(0, 1),
+          legend.justification = c(-0.2, 1.15),
+          legend.title = element_blank(),
+          legend.text = element_text(size = 12),
+          legend.background = element_rect(fill = "white")) +
+    scale_y_continuous(labels = scales::comma,
+                       limits = ylim) +
+    scale_x_continuous(breaks = x.ticks,
+                       labels = mon) +
+    ylab("Cumulative landings (thousand mt)") +
+    xlab("Month")
   if(!is.na(horiz.line.spacing)){
-    g <- g + ggplot2::geom_hline(yintercept = seq(0, ylim[2], horiz.line.spacing),
-                                 linetype = "dashed")
+    g <- g + geom_hline(yintercept = seq(0, ylim[2], horiz.line.spacing),
+                        linetype = "dashed")
   }
   g
 }
