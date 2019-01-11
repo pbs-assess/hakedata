@@ -42,43 +42,6 @@ fishery_enum <- function(){
        all = "All")
 }
 
-get_catch <- function(d,
-                      major_areas = hakedata::major_hake_areas,
-                      fishery = fishery_enum()$all,
-                      include_juandefuca = TRUE){
-  if(fishery == fishery_enum()$ss){
-    ct <- d$catch %>%
-      dplyr::filter(!vessel_registration_number %in% hakedata::ft$FOS.ID)
-  }else if(fishery == fishery_enum()$ft){
-    ct <- d$catch %>%
-      dplyr::filter(vessel_registration_number %in% hakedata::ft$FOS.ID)
-  }else if(fishery == fishery_enum()$jv){
-    ct <- d$catch %>% dplyr::filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
-  }else{ ## Assume catch from all fisheries
-    ct <- d$catch
-  }
-
-  d_out <- ct %>%
-    dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
-                  major_stat_area_code %in% major_areas &
-                  gear == "MIDWATER TRAWL")
-
-  if(include_juandefuca){
-    d_juandefuca <- ct %>%
-      dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
-                    major_stat_area_code == "01" &
-                    minor_stat_area_code == "20" &
-                    gear == "MIDWATER TRAWL")
-
-    d_out <- bind_rows(d_out, d_juandefuca)
-  }
-  d_out %>%
-    group_by(best_date) %>%
-    summarize(total_catch = sum(landed_kg + discarded_kg),
-              num_landings = n()) %>%
-    dplyr::ungroup()
-}
-
 #' catch_by_day
 #'
 #' @param d a list of data retrieved using gfplot package functions
@@ -102,10 +65,10 @@ catch_by_day <- function(d,
 
   if(fishery == fishery_enum()$ss){
     ct <- d$catch %>%
-      dplyr::filter(!vessel_registration_number %in% hakedata::ft$FOS.ID)
+      dplyr::filter(!vessel_registration_number %in% hakedata::freezer_trawlers$FOS.ID)
   }else if(fishery == fishery_enum()$ft){
     ct <- d$catch %>%
-      dplyr::filter(vessel_registration_number %in% hakedata::ft$FOS.ID)
+      dplyr::filter(vessel_registration_number %in% hakedata::freezer_trawlers$FOS.ID)
   }else if(fishery == fishery_enum()$jv){
     ct <- d$catch %>% dplyr::filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
   }else{ ## Assume catch from all fisheries
