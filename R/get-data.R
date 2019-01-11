@@ -32,6 +32,9 @@ load_data <- function(file = file.path(here::here("generated-data"),
                                                     "-",
                                                     hakedata::species_name),
                                                ".rds"))){
+  if(!file.exists(file)){
+    stop("Error, file ", file, " does not exist. To create it, run fetch_data().\n")
+  }
   readRDS(file)
 }
 
