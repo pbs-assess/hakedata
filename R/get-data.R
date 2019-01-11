@@ -53,12 +53,14 @@ fishery_enum <- function(){
 
 #' catch_by_day
 #'
+#' Calculate the catch by day for a given fishery
+#'
 #' @param d a list of data retrieved using gfplot package functions
 #' @param major_areas a vector of major stat areas as strings. e.g. "01" is 4B Strait of Georgia
 #' @param fishery the fishery to return the catch for. Default is all records. Uses the fishery_enum
 #'   function as an enumerator to shorten names.
 #' @param include_juandefuca Include the minor area of Juan De Fuca Strait which is located in major area 4B
-#' @return the catch data frame by year, month, and day
+#' @return the catch data frame
 #' @export
 #' @importFrom dplyr mutate group_by summarize filter bind_rows
 #' @importFrom lubridate month day year
