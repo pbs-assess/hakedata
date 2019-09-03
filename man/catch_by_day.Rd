@@ -4,12 +4,12 @@
 \alias{catch_by_day}
 \title{catch_by_day}
 \usage{
-catch_by_day(d, major_areas = hakedata::major_hake_areas,
+catch_by_day(d, major_areas = major_hake_areas,
   fishery = fishery_enum()$all, include_juandefuca = TRUE,
   byarea = FALSE)
 }
 \arguments{
-\item{d}{a list of data retrieved using gfplot package functions}
+\item{d}{a list of data retrieved using gfdata package functions}
 
 \item{major_areas}{a vector of major stat areas as strings. e.g. "01" is 4B Strait of Georgia}
 

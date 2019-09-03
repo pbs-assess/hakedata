@@ -36,24 +36,28 @@ plot_color <- function(n.cols = 10) {
 #' @param inc_years Years to include in the plot
 #' @param weight_factor Divide catch values by this to scale y-axis
 #' @param ylim Vector of 2, Y-axis limits
-#' @param horiz.line.spacing
+#' @param horiz_line_spacing
 #'
 #' @return A ggplot object
 #' @export
-#' @importFrom ggplot2 aes geom_point scale_color_manual theme element_blank
+#' @importFrom ggplot2 aes geom_point geom_line scale_color_manual theme element_blank
 #'  element_text element_rect scale_y_continuous scale_x_continuous ylab xlab
 #'  geom_hline
+#' @importFrom dplyr n
+#' @importFrom lubridate now
 #'
 #' @examples
 #' d <- load_data()
 #' ct <- catch_by_day(d)
 #' ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft)
-#' plot_cumu_catch(ct.ft, horiz.line.spacing = 5)
+#' plot_cumu_catch(ct.ft, ylim = c(0, 45), horiz_line_spacing = 5)
+#' plot_cumu_catch(ct, horiz_line_spacing = 12.5)
 plot_cumu_catch <- function(d,
-                            inc_years = 2009:lubridate::year(lubridate::now()),
+                            inc_years = (year(now()) - 5):year(now()),
                             weight_factor = 1e6,
-                            ylim = c(0, 45),
-                            horiz.line.spacing = NA){
+                            ylim = c(0, 100),
+                            line_thickness = 1.5,
+                            horiz_line_spacing = NA){
   d <- d %>%
     mutate(Date = as.Date(best_date)) %>%
     tidyr::complete(Date = seq.Date(min(Date), max(Date), by = "day")) %>%
@@ -91,7 +95,7 @@ plot_cumu_catch <- function(d,
 
   g <- ggplot2::ggplot(d) +
     aes(x = day, y = cumu_catch, color = year) +
-    geom_point() +
+    geom_line(size = line_thickness) +
     scale_color_manual(values = colors) +
     theme(legend.position = c(0, 1),
           legend.justification = c(-0.2, 1.15),
@@ -104,8 +108,8 @@ plot_cumu_catch <- function(d,
                        labels = mon) +
     ylab("Cumulative landings (thousand mt)") +
     xlab("Month")
-  if(!is.na(horiz.line.spacing)){
-    g <- g + geom_hline(yintercept = seq(0, ylim[2], horiz.line.spacing),
+  if(!is.na(horiz_line_spacing)){
+    g <- g + geom_hline(yintercept = seq(0, ylim[2], horiz_line_spacing),
                         linetype = "dashed")
   }
   g

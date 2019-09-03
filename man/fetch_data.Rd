@@ -4,8 +4,8 @@
 \alias{fetch_data}
 \title{fetch_data}
 \usage{
-fetch_data(file = file.path(here::here("generated-data"),
-  paste0(gsub(" ", "-", hakedata::species_name), ".rds")))
+fetch_data(file = here("generated-data", paste0(gsub(" ", "-",
+  species_name), ".rds")))
 }
 \arguments{
 \item{file}{the full path filename including extension .rds}

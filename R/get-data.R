@@ -3,18 +3,20 @@
 #' @param file the full path filename including extension .rds
 #'
 #' @export
+#' @importFrom gfdata get_commercial_samples get_survey_samples get_catch
+#' @importFrom here here
 #'
 #' @examples
 #' fetch_data()
-fetch_data <- function(file = file.path(here::here("generated-data"),
-                                        paste0(gsub(" ",
-                                                    "-",
-                                                    hakedata::species_name),
-                                               ".rds"))){
+fetch_data <- function(file = here("generated-data",
+                       paste0(gsub(" ",
+                                   "-",
+                                   species_name),
+                              ".rds"))){
   d <- list()
-  d$commercial_samples <- gfplot::get_commercial_samples(species_name)
-  d$survey_samples <- gfplot::get_survey_samples(species_name)
-  d$catch <- gfplot::get_catch(species_name)
+  d$commercial_samples <- get_commercial_samples(species_name)
+  d$survey_samples <- get_survey_samples(species_name)
+  d$catch <- get_hake_catch(species_name)
   saveRDS(d, file)
 }
 
@@ -24,16 +26,18 @@ fetch_data <- function(file = file.path(here::here("generated-data"),
 #'
 #' @return the contents of the rds file as a list
 #' @export
+#' @importFrom here here
 #'
 #' @examples
 #' d <- load_data()
-load_data <- function(file = file.path(here::here("generated-data"),
-                                        paste0(gsub(" ",
-                                                    "-",
-                                                    hakedata::species_name),
-                                               ".rds"))){
+load_data <- function(file = here("generated-data",
+                                  paste0(gsub(" ",
+                                              "-",
+                                              species_name),
+                                         ".rds"))){
   if(!file.exists(file)){
-    stop("Error, file ", file, " does not exist. To create it, run fetch_data().\n")
+    stop("Error, file ", file, " does not exist. To create it, run fetch_data().",
+         call. = FALSE)
   }
   readRDS(file)
 }
@@ -58,7 +62,7 @@ fishery_enum <- function(){
 #'
 #' Calculate the catch by day for a given fishery
 #'
-#' @param d a list of data retrieved using gfplot package functions
+#' @param d a list of data retrieved using gfdata package functions
 #' @param major_areas a vector of major stat areas as strings. e.g. "01" is 4B Strait of Georgia
 #' @param fishery the fishery to return the catch for. Default is all records. Uses the fishery_enum
 #'   function as an enumerator to shorten names.
@@ -67,7 +71,7 @@ fishery_enum <- function(){
 #'   there will be one unique row for each day
 #' @return the catch data frame
 #' @export
-#' @importFrom dplyr mutate group_by summarize filter bind_rows ungroup
+#' @importFrom dplyr mutate group_by summarize filter bind_rows ungroup row_number
 #' @importFrom lubridate month day year
 #' @examples
 #' fetch_data()
@@ -75,35 +79,35 @@ fishery_enum <- function(){
 #' ct <- catch_by_day(d)
 #' ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft)
 catch_by_day <- function(d,
-                         major_areas = hakedata::major_hake_areas,
+                         major_areas = major_hake_areas,
                          fishery = fishery_enum()$all,
                          include_juandefuca = TRUE,
                          byarea = FALSE){
 
   if(fishery == fishery_enum()$ss){
     ct <- d$catch %>%
-      dplyr::filter(!vessel_registration_number %in% hakedata::freezer_trawlers$FOS.ID)
+      filter(!vessel_registration_number %in% freezer_trawlers$FOS.ID)
   }else if(fishery == fishery_enum()$ft){
     ct <- d$catch %>%
-      dplyr::filter(vessel_registration_number %in% hakedata::freezer_trawlers$FOS.ID)
+      filter(vessel_registration_number %in% freezer_trawlers$FOS.ID)
   }else if(fishery == fishery_enum()$jv){
     ct <- d$catch %>%
-      dplyr::filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
+      filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
   }else{ ## Assume catch from all fisheries
     ct <- d$catch
   }
 
   d_out <- ct %>%
-    dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
-                  major_stat_area_code %in% major_areas &
-                  gear == "MIDWATER TRAWL")
+    filter(fishery_sector == "GROUNDFISH TRAWL" &
+             major_stat_area_code %in% major_areas &
+             gear == "MIDWATER TRAWL")
 
   if(include_juandefuca){
     d_juandefuca <- ct %>%
-      dplyr::filter(fishery_sector == "GROUNDFISH TRAWL" &
-                    major_stat_area_code == "01" &
-                    minor_stat_area_code == "20" &
-                    gear == "MIDWATER TRAWL")
+      filter(fishery_sector == "GROUNDFISH TRAWL" &
+               major_stat_area_code == "01" &
+               minor_stat_area_code == "20" &
+               gear == "MIDWATER TRAWL")
 
     d_out <- bind_rows(d_out, d_juandefuca)
   }
@@ -117,8 +121,8 @@ catch_by_day <- function(d,
   }
   d_out %>%
     summarize(total_catch = sum(landed_kg + discarded_kg),
-              num_landings = n()) %>%
-    dplyr::ungroup()
+              num_landings = row_number()) %>%
+    ungroup()
 }
 
 get_comm_samples <- function(d,

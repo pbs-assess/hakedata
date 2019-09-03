@@ -4,8 +4,8 @@
 \alias{load_data}
 \title{load_data}
 \usage{
-load_data(file = file.path(here::here("generated-data"), paste0(gsub(" ",
-  "-", hakedata::species_name), ".rds")))
+load_data(file = here("generated-data", paste0(gsub(" ", "-",
+  species_name), ".rds")))
 }
 \arguments{
 \item{file}{the full path filename including extension .rds}

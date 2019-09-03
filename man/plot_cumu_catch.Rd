@@ -4,8 +4,8 @@
 \alias{plot_cumu_catch}
 \title{Plot_cumu_catch}
 \usage{
-plot_cumu_catch(d, inc_years = 2009:lubridate::year(lubridate::now()),
-  weight_factor = 1e+06, ylim = c(0, 45), horiz.line.spacing = NA)
+plot_cumu_catch(d, inc_years = 2009:year(now()), weight_factor = 1e+06,
+  ylim = c(0, 45), horiz.line.spacing = NA)
 }
 \arguments{
 \item{d}{Data frame as output from catch_by_day()}
