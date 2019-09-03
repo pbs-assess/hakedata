@@ -63,6 +63,8 @@ fishery_enum <- function(){
 #' @param fishery the fishery to return the catch for. Default is all records. Uses the fishery_enum
 #'   function as an enumerator to shorten names.
 #' @param include_juandefuca Include the minor area of Juan De Fuca Strait which is located in major area 4B
+#' @param byarea If TRUE, data frame will be have one row per unique date & area. If FALSE,
+#'   there will be one unique row for each day
 #' @return the catch data frame
 #' @export
 #' @importFrom dplyr mutate group_by summarize filter bind_rows ungroup
@@ -75,7 +77,8 @@ fishery_enum <- function(){
 catch_by_day <- function(d,
                          major_areas = hakedata::major_hake_areas,
                          fishery = fishery_enum()$all,
-                         include_juandefuca = TRUE){
+                         include_juandefuca = TRUE,
+                         byarea = FALSE){
 
   if(fishery == fishery_enum()$ss){
     ct <- d$catch %>%
@@ -84,7 +87,8 @@ catch_by_day <- function(d,
     ct <- d$catch %>%
       dplyr::filter(vessel_registration_number %in% hakedata::freezer_trawlers$FOS.ID)
   }else if(fishery == fishery_enum()$jv){
-    ct <- d$catch %>% dplyr::filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
+    ct <- d$catch %>%
+      dplyr::filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
   }else{ ## Assume catch from all fisheries
     ct <- d$catch
   }
@@ -103,11 +107,18 @@ catch_by_day <- function(d,
 
     d_out <- bind_rows(d_out, d_juandefuca)
   }
+
+  if(byarea){
+    d_out <- d_out %>%
+      group_by(best_date, major_stat_area_code)
+  }else{
+    d_out <- d_out %>%
+      group_by(best_date)
+  }
   d_out %>%
-    group_by(best_date) %>%
     summarize(total_catch = sum(landed_kg + discarded_kg),
               num_landings = n()) %>%
-    ungroup()
+    dplyr::ungroup()
 }
 
 get_comm_samples <- function(d,

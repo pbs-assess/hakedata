@@ -110,3 +110,23 @@ plot_cumu_catch <- function(d,
   }
   g
 }
+
+plot_area_dist <- function(d,
+                           inc_areas = hakedata::major_hake_areas,
+                           inc_years = 2009:lubridate::year(lubridate::now()),
+                           ylim = c(0, 1300)){
+
+  d_out <- d %>%
+    mutate(year = year(best_date),
+           area = major_stat_area_code) %>%
+    dplyr::filter(area %in% inc_areas,
+                  year %in% inc_years) %>%
+    dplyr::select(-best_date) %>%
+    group_by(year, area) %>%
+    summarize(landings = sum(num_landings))
+
+browser()
+
+
+
+}

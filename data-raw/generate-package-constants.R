@@ -24,6 +24,6 @@ freezer_trawlers <-
                               595,
                               1727))
 
-usethis::use_data(species_name)
-usethis::use_data(freezer_trawlers)
-usethis::use_data(major_hake_areas)
+usethis::use_data(species_name, overwrite = TRUE)
+usethis::use_data(freezer_trawlers, overwrite = TRUE)
+usethis::use_data(major_hake_areas, overwrite = TRUE)
