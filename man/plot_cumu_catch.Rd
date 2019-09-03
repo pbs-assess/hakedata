@@ -4,8 +4,9 @@
 \alias{plot_cumu_catch}
 \title{Plot_cumu_catch}
 \usage{
-plot_cumu_catch(d, inc_years = 2009:year(now()), weight_factor = 1e+06,
-  ylim = c(0, 45), horiz.line.spacing = NA)
+plot_cumu_catch(d, inc_years = (year(now()) - 5):year(now()),
+  weight_factor = 1e+06, ylim = c(0, 100), line_thickness = 1.5,
+  horiz_line_spacing = NA)
 }
 \arguments{
 \item{d}{Data frame as output from catch_by_day()}
@@ -16,7 +17,7 @@ plot_cumu_catch(d, inc_years = 2009:year(now()), weight_factor = 1e+06,
 
 \item{ylim}{Vector of 2, Y-axis limits}
 
-\item{horiz.line.spacing}{}
+\item{horiz_line_spacing}{}
 }
 \value{
 A ggplot object
@@ -28,5 +29,6 @@ Plot the cumulative catch for the given years
 d <- load_data()
 ct <- catch_by_day(d)
 ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft)
-plot_cumu_catch(ct.ft, horiz.line.spacing = 5)
+plot_cumu_catch(ct.ft, ylim = c(0, 45), horiz_line_spacing = 5)
+plot_cumu_catch(ct, horiz_line_spacing = 12.5)
 }

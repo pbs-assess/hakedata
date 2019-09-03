@@ -43,8 +43,9 @@ plot_color <- function(n.cols = 10) {
 #' @importFrom ggplot2 aes geom_point geom_line scale_color_manual theme element_blank
 #'  element_text element_rect scale_y_continuous scale_x_continuous ylab xlab
 #'  geom_hline
-#' @importFrom dplyr n
-#' @importFrom lubridate now
+#' @importFrom dplyr n filter select mutate group_by summarize ungroup transmute
+#' @importFrom lubridate year now
+#' @importFrom tidyr complete
 #'
 #' @examples
 #' d <- load_data()
@@ -60,10 +61,10 @@ plot_cumu_catch <- function(d,
                             horiz_line_spacing = NA){
   d <- d %>%
     mutate(Date = as.Date(best_date)) %>%
-    tidyr::complete(Date = seq.Date(min(Date), max(Date), by = "day")) %>%
+    complete(Date = seq.Date(min(Date), max(Date), by = "day")) %>%
     mutate(year = lubridate::year(Date)) %>%
-    dplyr::filter(year %in% inc_years) %>%
-    dplyr::select(-best_date)
+    filter(year %in% inc_years) %>%
+    select(-best_date)
 
   d$total_catch[is.na(d$total_catch)] <- 0
   d$num_landings[is.na(d$num_landings)] <- 0
@@ -73,14 +74,14 @@ plot_cumu_catch <- function(d,
     group_by(Date) %>%
     summarize(year = year[1],
               total_catch = sum(total_catch) / weight_factor) %>%
-    dplyr::ungroup()
+    ungroup()
 
   ## Cumulative sums by year
   d <- d %>%
     group_by(year) %>%
     mutate(day = seq(1, n()),
            cumu_catch = cumsum(total_catch)) %>%
-    dplyr::ungroup()
+    ungroup()
 
   d <- d %>%
     transmute(year = as.factor(year),
