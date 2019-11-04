@@ -5,7 +5,7 @@
 \title{fetch_data}
 \usage{
 fetch_data(file = here("generated-data", paste0(gsub(" ", "-",
-  species_name), ".rds")))
+  species_name), ".rds")), overwrite = FALSE)
 }
 \arguments{
 \item{file}{the full path filename including extension .rds}

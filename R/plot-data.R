@@ -116,9 +116,29 @@ plot_cumu_catch <- function(d,
   g
 }
 
+#' Plot distribution of catch by area
+#'
+#' @param d Data frame as output from catch_by_day()
+#' @param inc_areas Areas to include in the plot
+#' @param inc_years Years to include in the plot
+#' @param ylim Vector of 2, Y-axis limits
+#'
+#' @return A ggplot object
+#' @export
+#' @importFrom ggplot2 aes geom_point geom_line scale_color_manual theme element_blank
+#'  element_text element_rect scale_y_continuous scale_x_continuous ylab xlab
+#'  geom_hline
+#' @importFrom dplyr n filter select mutate group_by summarize ungroup transmute
+#'
+#' @examples
+#' d <- load_data()
+#' ct <- catch_by_day(d, byarea = TRUE)
+#' ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft, byarea = TRUE)
+#' plot_area_dist(ct.ft, ylim = c(0, 45))
+#' plot_area_dist(ct)
 plot_area_dist <- function(d,
-                           inc_areas = hakedata::major_hake_areas,
-                           inc_years = 2009:lubridate::year(lubridate::now()),
+                           inc_areas = major_hake_areas,
+                           inc_years = (year(now()) - 5):year(now()),
                            ylim = c(0, 1300)){
 
   d_out <- d %>%

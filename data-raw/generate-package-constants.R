@@ -24,6 +24,10 @@ freezer_trawlers <-
                               595,
                               1727))
 
+
+shoreside_trip_type <- 12764
+jv_trip_type <- 12766
+
 usethis::use_data(species_name, overwrite = TRUE)
 usethis::use_data(freezer_trawlers, overwrite = TRUE)
 usethis::use_data(major_hake_areas, overwrite = TRUE)

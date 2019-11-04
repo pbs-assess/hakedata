@@ -3,20 +3,29 @@
 #' @param file the full path filename including extension .rds
 #'
 #' @export
-#' @importFrom gfdata get_commercial_samples get_survey_samples get_catch
+#' @importFrom gfdata get_commercial_samples get_survey_samples get_hake_catch
 #' @importFrom here here
 #'
 #' @examples
 #' fetch_data()
 fetch_data <- function(file = here("generated-data",
-                       paste0(gsub(" ",
-                                   "-",
-                                   species_name),
-                              ".rds"))){
+                                   paste0(gsub(" ",
+                                               "-",
+                                               species_name),
+                                          ".rds")),
+                       overwrite = FALSE){
+  if(file.exists(file)){
+    if(overwrite){
+      unlink(file)
+    }else{
+      message("File already exists and overwrite is FALSE so nothing was done.")
+      return()
+    }
+  }
   d <- list()
   d$commercial_samples <- get_commercial_samples(species_name)
   d$survey_samples <- get_survey_samples(species_name)
-  d$catch <- get_hake_catch(species_name)
+  d$catch <- get_hake_catch()
   saveRDS(d, file)
 }
 
@@ -119,6 +128,7 @@ catch_by_day <- function(d,
     d_out <- d_out %>%
       group_by(best_date)
   }
+  browser()
   d_out %>%
     summarize(total_catch = sum(landed_kg + discarded_kg),
               num_landings = row_number()) %>%
