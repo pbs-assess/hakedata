@@ -1,3 +1,143 @@
+#' Loads data from csv files found in the data directory. See [hakedata::landings_file]
+#' and [hakedata::logs_pattern] for filenames.
+#'
+#' @return
+#' @export
+#' @importFrom sqldf sqldf
+#' @importFrom readr read_csv
+#' @importFrom purrr map reduce
+#'
+#' @examples
+load_data <- function(){
+  data_path <- here("data")
+
+  # DMP LANDINGS
+  dmp <- readLines(file.path(data_path, dmp_file))
+  if(length(grep("^PACIFIC HAKE", dmp[1]))){
+    dmp <- dmp[-1]
+    writeLines(dmp, file.path(data_path, dmp_file))
+  }
+  dmp <- read_csv(file.path(data_path, dmp_file))
+  # Replace all spaces in column names with periods
+  names(dmp) <- gsub(" +", ".", names(dmp))
+  dmp$LANDING.DATE <- gsub(" 00:00", "", dmp$LANDING.DATE)
+  dmp$LANDING.DATE <- as.Date(dmp$LANDING.DATE, "%B %d %Y")
+  dmp <- dmp %>%
+    mutate(year = year(LANDING.DATE),
+           month = month(LANDING.DATE),
+           day = day(LANDING.DATE))
+  dmp <- remove_trip_data(dmp, c("GULF", "OPT B"), "LICENCE.TRIP.TYPE")
+
+  # LOGS LANDINGS
+  logs_files <- dir(data_path, pattern = logs_pattern)
+  map(logs_files, ~strip_lines(file.path(data_path, .)))
+  logs <- map(logs_files, ~read_csv(file.path(data_path, .)))
+  logs <- reduce(logs, rbind)
+  # Replace all spaces in column names with periods
+  names(logs) <- gsub(" +", ".", names(logs))
+  logs$LANDING.DATE <- as.Date(logs$LANDING.DATE, "%B %d %Y")
+  logs <- logs %>%
+    mutate(year = year(LANDING.DATE),
+           month = month(LANDING.DATE),
+           day = day(LANDING.DATE))
+  logs <- remove_trip_data(logs, c("GULF", "OPT B"), "TRIP.TYPE")
+  ## Issue warning if any logs records show 4B
+  if(any(logs$AREA == "4B")){
+    area4b <<- logs[logs$AREA == "4B",]
+    logs <- logs[logs$LANDING.PORT != "FRENCH CREEK",]
+    logs <- logs[-(logs$AREA == "4B" &
+                             month(logs$LANDING.DATE) < 6),]
+    warning("Some of the LOGS landings are in the 4B area. They ",
+            "are stored in the variable `area4b` for manual checking. ",
+            "All landings from French Creek were removed, and those landed ",
+            "before June in 4B, but you may want to remove some other records.")
+  }
+
+browser()
+
+}
+
+#' Remove some trip types from a data frame
+#'
+#' @param d the data frame with a column named the same as `trip_type_colname`
+#' @param types a vector of strings to grep for in the `trip_type_colname` column for removal
+#' @param trip_type_colname the column name containing the trip type strings
+#'
+#' @return a data frame with the data removed for the trip types
+#'
+#' @examples
+remove_trip_data <- function(d, types, trip_type_colname){
+  for(ty in types){
+    gr <- grep(ty, d[[trip_type_colname]])
+    if(length(gr)){
+      d <- d[-gr,]
+    }
+  }
+  d
+}
+
+#' Sum and count the landings by aggregating by years and months. Assumes the
+#' catch weight is in pounds and converts the sum to kilograms.
+#'
+#' @param df data frame as
+#' @param fishery
+#'
+#' @return a data frame with the following five columns:
+#'   Fishery, Year, Month, weightKg, numLandings
+#'   Where Fishery will be the same for all records (fishery string)
+#' @export
+#'
+#' @examples
+calc_landings <- function(df, fishery){
+  ## Remove the unneeded fields to prep for aggregation
+  d <- as.data.frame(cbind(df$year, df$month, df$CONVERTED.WGHT.LBS.))
+  if(nrow(d) == 0){
+    return(NULL)
+  }
+  ## Aggregate the data frame by year and month, summing landings
+  dsum <- aggregate(d[,3], by=list(d[,1], d[,2]), FUN=sum)
+  ## Sort the data table by year and month, ascending
+  dsum <- dsum[order(dsum[,1],dsum[,2]),]
+  ## Convert all weights
+  dsum[,3] <- dsum[,3] / POUNDS.TO.KILOS
+
+  ## Aggregate the data frame by year and month, counting landings
+  dcount <- aggregate(d[,3], by=list(d[,1], d[,2]), FUN=length)
+  ## Sort the data table by year and month, ascending
+  dcount <- dcount[order(dcount[,1],dcount[,2]),]
+
+  ## Merge the two tables
+  dboth <- cbind(dsum, dcount[,3])
+  ## Add the field describing the fishery
+  dboth <- cbind(rep(fishery, nrow(dboth)), dboth)
+  colnames(dboth) <- c("Fishery", "Year", "Month", "weightKg", "numLandings")
+  return(dboth)
+}
+
+#' Strip the first n lines off a file, and re-save
+#'
+#' @param file filename
+#'
+#' @export
+#'
+#' @examples
+strip_lines <- function(file){
+  d <- readLines(file)
+  if(length(grep("^LOGBOOK", d[1]))){
+    # Strip the lines
+    ind_empty_lines <- which(!nzchar(d))
+    if(!length(ind_empty_lines)){
+      stop("Could not find an empty line in the file ",
+           file,
+           ". Check the file, there should be an empty line before the header line.",
+           call. = FALSE)
+    }
+    ind_last_empty_line <- max(ind_empty_lines)
+    d <- d[-c(1:ind_last_empty_line)]
+    writeLines(d, file)
+  }
+}
+
 #' fetch_data
 #'
 #' @param file the full path filename including extension .rds
@@ -29,7 +169,7 @@ fetch_data <- function(file = here("generated-data",
   saveRDS(d, file)
 }
 
-#' load_data
+#' load_data_gfdata
 #'
 #' @param file the full path filename including extension .rds
 #'
@@ -38,8 +178,8 @@ fetch_data <- function(file = here("generated-data",
 #' @importFrom here here
 #'
 #' @examples
-#' d <- load_data()
-load_data <- function(file = here("generated-data",
+#' d <- load_data_gfdata()
+load_data_gfdata <- function(file = here("generated-data",
                                   paste0(gsub(" ",
                                               "-",
                                               species_name),

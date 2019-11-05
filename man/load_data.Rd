@@ -2,20 +2,12 @@
 % Please edit documentation in R/get-data.R
 \name{load_data}
 \alias{load_data}
-\title{load_data}
+\title{Loads data from csv files found in the data directory. See [hakedata::landings_file]
+and [hakedata::logs_pattern] for filenames.}
 \usage{
-load_data(file = here("generated-data", paste0(gsub(" ", "-",
-  species_name), ".rds")))
-}
-\arguments{
-\item{file}{the full path filename including extension .rds}
-}
-\value{
-the contents of the rds file as a list
+load_data()
 }
 \description{
-load_data
-}
-\examples{
-d <- load_data()
+Loads data from csv files found in the data directory. See [hakedata::landings_file]
+and [hakedata::logs_pattern] for filenames.
 }

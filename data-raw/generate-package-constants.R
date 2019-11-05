@@ -3,6 +3,8 @@
 ## the constants.rda file.
 
 species_name <- "pacific hake"
+dmp_file <- "LandingsSpeciesDateDMP.csv"
+logs_pattern <- "^LogCatchReport[0-9]{4}\\.csv$"
 
 major_hake_areas <- c("03", "04", "05", "06", "07", "08", "09")
 
@@ -31,3 +33,6 @@ jv_trip_type <- 12766
 usethis::use_data(species_name, overwrite = TRUE)
 usethis::use_data(freezer_trawlers, overwrite = TRUE)
 usethis::use_data(major_hake_areas, overwrite = TRUE)
+usethis::use_data(dmp_file, overwrite = TRUE)
+usethis::use_data(logs_pattern, overwrite = TRUE)
+
