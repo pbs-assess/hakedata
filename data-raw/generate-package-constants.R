@@ -29,10 +29,12 @@ freezer_trawlers <-
 
 shoreside_trip_type <- 12764
 jv_trip_type <- 12766
+lbs_to_kilos <- 2.20462262
 
 usethis::use_data(species_name, overwrite = TRUE)
 usethis::use_data(freezer_trawlers, overwrite = TRUE)
 usethis::use_data(major_hake_areas, overwrite = TRUE)
 usethis::use_data(dmp_file, overwrite = TRUE)
 usethis::use_data(logs_pattern, overwrite = TRUE)
+usethis::use_data(lbs_to_kilos, overwrite = TRUE)
 

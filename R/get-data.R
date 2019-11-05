@@ -3,7 +3,6 @@
 #'
 #' @return
 #' @export
-#' @importFrom sqldf sqldf
 #' @importFrom readr read_csv
 #' @importFrom purrr map reduce
 #'
@@ -20,6 +19,8 @@ load_data <- function(){
   dmp <- read_csv(file.path(data_path, dmp_file))
   # Replace all spaces in column names with periods
   names(dmp) <- gsub(" +", ".", names(dmp))
+  names(dmp) <- gsub("\\(", ".", names(dmp))
+  names(dmp) <- gsub("\\)", "", names(dmp))
   dmp$LANDING.DATE <- gsub(" 00:00", "", dmp$LANDING.DATE)
   dmp$LANDING.DATE <- as.Date(dmp$LANDING.DATE, "%B %d %Y")
   dmp <- dmp %>%
@@ -35,26 +36,92 @@ load_data <- function(){
   logs <- reduce(logs, rbind)
   # Replace all spaces in column names with periods
   names(logs) <- gsub(" +", ".", names(logs))
+  names(logs) <- gsub("/", ".", names(logs))
   logs$LANDING.DATE <- as.Date(logs$LANDING.DATE, "%B %d %Y")
   logs <- logs %>%
     mutate(year = year(LANDING.DATE),
            month = month(LANDING.DATE),
            day = day(LANDING.DATE))
   logs <- remove_trip_data(logs, c("GULF", "OPT B"), "TRIP.TYPE")
-  ## Issue warning if any logs records show 4B
   if(any(logs$AREA == "4B")){
-    area4b <<- logs[logs$AREA == "4B",]
-    logs <- logs[logs$LANDING.PORT != "FRENCH CREEK",]
-    logs <- logs[-(logs$AREA == "4B" &
-                             month(logs$LANDING.DATE) < 6),]
+    area4b <<- filter(logs, AREA == "4B")
+    logs <- filter(logs,
+                   LANDING.PORT != "FRENCH CREEK",
+                  !(AREA == "4B" && month < 6))
     warning("Some of the LOGS landings are in the 4B area. They ",
             "are stored in the variable `area4b` for manual checking. ",
             "All landings from French Creek were removed, and those landed ",
             "before June in 4B, but you may want to remove some other records.")
   }
+  list(dmp, logs)
+}
 
-browser()
+#' Get the shoreside catch data from the DMP and LOGS data frames
+#'
+#' @param dmp The Dockside Monitoring Program data frame as extracted by [hakedata::load_data()]
+#' @param logs The Logbook data frame as extracted by [hakedata::load_data()]
+#'
+#' @return a data frame containing only shoreside data
+#' @export
+#' @importFrom dplyr filter group_by summarize ungroup full_join
+#'
+#' @examples
+get_ss_catch <- function(dmp, logs){
 
+}
+
+#' Get the freezer trawler data from the DMP and LOGS data frames
+#'
+#' @param dmp The Dockside Monitoring Program data frame as extracted by [hakedata::load_data()]
+#' @param logs The Logbook data frame as extracted by [hakedata::load_data()]
+#'
+#' @return a data frame containing only freezer trawler data
+#' @export
+#' @importFrom dplyr filter group_by summarize ungroup full_join
+#'
+#' @examples
+get_ft_catch <- function(dmp, logs){
+  ft_dmp <- dmp %>%
+    filter(VRN %in% freezer_trawlers$FOS.ID)
+  ft_logs <- logs %>%
+    filter(VRN %in% freezer_trawlers$FOS.ID)
+
+  # In case the freezer trawlers were ever fishing the JV fishery, remove those
+  tmp <- grep("JV", ft_dmp$LICENCE.TRIP.TYPE)
+  if(length(tmp)){
+    ft_dmp <- ft_dmp[-grep("JV", ft$LICENCE.TRIP.TYPE),]
+  }
+  tmp <- grep("JV", ft_logs$TRIP.TYPE)
+  if(length(tmp)){
+    ft_logs <- ft_logs[-grep("JV", ft_logs$TRIP.TYPE),]
+  }
+
+  # Fetch At-sea-observer discard records for freezer trawlers
+  ft_logs <- ft_logs %>%
+    filter(SOURCE == "ASOP",
+           !is.na(RELEASED.WT))
+
+  ft_dmp <- ft_dmp %>%
+    select(year, month, CONVERTED.WGHT.LBS) %>%
+    group_by(year, month) %>%
+    summarize(landings = sum(CONVERTED.WGHT.LBS) / lbs_to_kilos,
+              count =  n()) %>%
+    ungroup()
+  ft_discards <- ft_logs %>%
+    select(year, month, RELEASED.WT) %>%
+    group_by(year, month) %>%
+    summarize(landings = sum(RELEASED.WT) / lbs_to_kilos,
+              count =  n()) %>%
+    ungroup()
+
+  full_join(ft_dmp, ft_discards, by = c("year", "month")) %>%
+    group_by(year, month) %>%
+    mutate(landings.x = ifelse(is.na(landings.x), 0, landings.x),
+           landings.y = ifelse(is.na(landings.y), 0, landings.y)) %>%
+    summarize(landings = landings.x + landings.y,
+              landings_count = count.x,
+              discards_count = count.y) %>%
+    ungroup()
 }
 
 #' Remove some trip types from a data frame
