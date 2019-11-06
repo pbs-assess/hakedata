@@ -56,65 +56,64 @@ load_data <- function(){
   list(dmp, logs)
 }
 
-#' Get the shoreside catch data from the DMP and LOGS data frames
+#' Get the catch data from the DMP and LOGS data frames
 #'
 #' @param dmp The Dockside Monitoring Program data frame as extracted by [hakedata::load_data()]
 #' @param logs The Logbook data frame as extracted by [hakedata::load_data()]
-#'
-#' @return a data frame containing only shoreside data
-#' @export
-#' @importFrom dplyr filter group_by summarize ungroup full_join
-#'
-#' @examples
-get_ss_catch <- function(dmp, logs){
-
-}
-
-#' Get the freezer trawler data from the DMP and LOGS data frames
-#'
-#' @param dmp The Dockside Monitoring Program data frame as extracted by [hakedata::load_data()]
-#' @param logs The Logbook data frame as extracted by [hakedata::load_data()]
+#' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
 #'
 #' @return a data frame containing only freezer trawler data
 #' @export
 #' @importFrom dplyr filter group_by summarize ungroup full_join
 #'
 #' @examples
-get_ft_catch <- function(dmp, logs){
-  ft_dmp <- dmp %>%
-    filter(VRN %in% freezer_trawlers$FOS.ID)
-  ft_logs <- logs %>%
-    filter(VRN %in% freezer_trawlers$FOS.ID)
+get_catch <- function(dmp, logs, type){
 
-  # In case the freezer trawlers were ever fishing the JV fishery, remove those
-  tmp <- grep("JV", ft_dmp$LICENCE.TRIP.TYPE)
-  if(length(tmp)){
-    ft_dmp <- ft_dmp[-grep("JV", ft$LICENCE.TRIP.TYPE),]
+  if(type == "ft" || type == "ss"){
+    # If the non-JV vessel was fishing in JV, remove those catches
+    dmp <- dmp %>%
+      filter(!grepl("JV", LICENCE.TRIP.TYPE))
+    logs <- logs %>%
+      filter(!grepl("JV", TRIP.TYPE))
   }
-  tmp <- grep("JV", ft_logs$TRIP.TYPE)
-  if(length(tmp)){
-    ft_logs <- ft_logs[-grep("JV", ft_logs$TRIP.TYPE),]
-  }
-
-  # Fetch At-sea-observer discard records for freezer trawlers
-  ft_logs <- ft_logs %>%
+  # At Sea Observer Program records only (all of those are discards in the LOGS data), for all fleet types
+  discards <- logs %>%
     filter(SOURCE == "ASOP",
            !is.na(RELEASED.WT))
 
-  ft_dmp <- ft_dmp %>%
+  if(type == "ft"){
+    dmp <- dmp %>%
+      filter(VRN %in% freezer_trawlers$FOS.ID)
+    discards <- discards %>%
+      filter(VRN %in% freezer_trawlers$FOS.ID)
+  }else if(type == "ss"){
+    dmp <- dmp %>%
+      filter(!VRN %in% freezer_trawlers$FOS.ID)
+    discards <- discards %>%
+      filter(!VRN %in% freezer_trawlers$FOS.ID)
+  }else if(type == "jv"){
+    dmp <- dmp %>%
+      filter(grepl("JV", LICENCE.TRIP.TYPE))
+    logs <- logs %>%
+      filter(grepl("JV", TRIP.TYPE))
+  }else{
+    stop("type must be one of 'ft', 'ss', or 'jv'.", call. = FALSE)
+  }
+
+  dmp <- dmp %>%
     select(year, month, CONVERTED.WGHT.LBS) %>%
     group_by(year, month) %>%
     summarize(landings = sum(CONVERTED.WGHT.LBS) / lbs_to_kilos,
               count =  n()) %>%
     ungroup()
-  ft_discards <- ft_logs %>%
+  discards <- discards %>%
     select(year, month, RELEASED.WT) %>%
     group_by(year, month) %>%
     summarize(landings = sum(RELEASED.WT) / lbs_to_kilos,
               count =  n()) %>%
     ungroup()
 
-  full_join(ft_dmp, ft_discards, by = c("year", "month")) %>%
+  full_join(dmp, discards, by = c("year", "month")) %>%
     group_by(year, month) %>%
     mutate(landings.x = ifelse(is.na(landings.x), 0, landings.x),
            landings.y = ifelse(is.na(landings.y), 0, landings.y)) %>%
