@@ -142,51 +142,9 @@ remove_trip_data <- function(d, types, trip_type_colname){
   d
 }
 
-#' Sum and count the landings by aggregating by years and months. Assumes the
-#' catch weight is in pounds and converts the sum to kilograms.
-#'
-#' @param df data frame as
-#' @param fishery
-#'
-#' @return a data frame with the following five columns:
-#'   Fishery, Year, Month, weightKg, numLandings
-#'   Where Fishery will be the same for all records (fishery string)
-#' @export
-#'
-#' @examples
-calc_landings <- function(df, fishery){
-  ## Remove the unneeded fields to prep for aggregation
-  d <- as.data.frame(cbind(df$year, df$month, df$CONVERTED.WGHT.LBS.))
-  if(nrow(d) == 0){
-    return(NULL)
-  }
-  ## Aggregate the data frame by year and month, summing landings
-  dsum <- aggregate(d[,3], by=list(d[,1], d[,2]), FUN=sum)
-  ## Sort the data table by year and month, ascending
-  dsum <- dsum[order(dsum[,1],dsum[,2]),]
-  ## Convert all weights
-  dsum[,3] <- dsum[,3] / POUNDS.TO.KILOS
-
-  ## Aggregate the data frame by year and month, counting landings
-  dcount <- aggregate(d[,3], by=list(d[,1], d[,2]), FUN=length)
-  ## Sort the data table by year and month, ascending
-  dcount <- dcount[order(dcount[,1],dcount[,2]),]
-
-  ## Merge the two tables
-  dboth <- cbind(dsum, dcount[,3])
-  ## Add the field describing the fishery
-  dboth <- cbind(rep(fishery, nrow(dboth)), dboth)
-  colnames(dboth) <- c("Fishery", "Year", "Month", "weightKg", "numLandings")
-  return(dboth)
-}
-
 #' Strip the first n lines off a file, and re-save
 #'
 #' @param file filename
-#'
-#' @export
-#'
-#' @examples
 strip_lines <- function(file){
   d <- readLines(file)
   if(length(grep("^LOGBOOK", d[1]))){
@@ -202,75 +160,6 @@ strip_lines <- function(file){
     d <- d[-c(1:ind_last_empty_line)]
     writeLines(d, file)
   }
-}
-
-#' fetch_data
-#'
-#' @param file the full path filename including extension .rds
-#'
-#' @export
-#' @importFrom gfdata get_commercial_samples get_survey_samples get_hake_catch
-#' @importFrom here here
-#'
-#' @examples
-#' fetch_data()
-fetch_data <- function(file = here("generated-data",
-                                   paste0(gsub(" ",
-                                               "-",
-                                               species_name),
-                                          ".rds")),
-                       overwrite = FALSE){
-  if(file.exists(file)){
-    if(overwrite){
-      unlink(file)
-    }else{
-      message("File already exists and overwrite is FALSE so nothing was done.")
-      return()
-    }
-  }
-  d <- list()
-  d$commercial_samples <- get_commercial_samples(species_name)
-  d$survey_samples <- get_survey_samples(species_name)
-  d$catch <- get_hake_catch()
-  saveRDS(d, file)
-}
-
-#' load_data_gfdata
-#'
-#' @param file the full path filename including extension .rds
-#'
-#' @return the contents of the rds file as a list
-#' @export
-#' @importFrom here here
-#'
-#' @examples
-#' d <- load_data_gfdata()
-load_data_gfdata <- function(file = here("generated-data",
-                                  paste0(gsub(" ",
-                                              "-",
-                                              species_name),
-                                         ".rds"))){
-  if(!file.exists(file)){
-    stop("Error, file ", file, " does not exist. To create it, run fetch_data().",
-         call. = FALSE)
-  }
-  readRDS(file)
-}
-
-#' fishery_enum
-#'
-#' An enumeration function used to generalize code used in other functions
-#'
-#' @return A character astring representing the fishery
-#' @export
-#'
-#' @examples
-#' fishery_enum()$ft
-fishery_enum <- function(){
-  list(jv = "JV",
-       ss = "Shoreside",
-       ft = "Freezer Trawlers",
-       all = "All")
 }
 
 #' catch_by_day
