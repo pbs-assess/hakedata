@@ -3,6 +3,7 @@ Version: 0.0.0.9000
 Title: Data Extraction for Pacific Hake Assessment
 Description: Facilitates data extraction for Pacific hake multinational assessment.
 Authors@R: person("Chris", "Grandin", email = "chris.grandin@gmail.com", role = c("aut", "cre"))
+Depends: R (>= 3.5.0)
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
@@ -14,6 +15,10 @@ Imports:
   dplyr,
   lubridate,
   here,
-  tibble
+  tibble,
+  RColorBrewer,
+  purrr,
+  readr,
+  tidyr
 RoxygenNote: 6.1.1
-Remotes: github::pbs-assess/gfplot
+Remotes: github::pbs-assess/hakedata

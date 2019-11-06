@@ -1,12 +1,10 @@
 #' Loads data from csv files found in the data directory. See [hakedata::landings_file]
 #' and [hakedata::logs_pattern] for filenames.
 #'
-#' @return
+#' @return a list of two dataframes, one for the DMP data and one for the LOGS data
 #' @export
 #' @importFrom readr read_csv
 #' @importFrom purrr map reduce
-#'
-#' @examples
 load_data <- function(){
   data_path <- here("data")
 
@@ -65,9 +63,10 @@ load_data <- function(){
 #' @return a data frame containing only freezer trawler data
 #' @export
 #' @importFrom dplyr filter group_by summarize ungroup full_join
-#'
-#' @examples
 get_catch <- function(dmp, logs, type){
+  if(!type %in% c("ft", "ss", "jv")){
+    stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
+  }
 
   if(type == "ft" || type == "ss"){
     # If the non-JV vessel was fishing in JV, remove those catches
@@ -96,8 +95,6 @@ get_catch <- function(dmp, logs, type){
       filter(grepl("JV", LICENCE.TRIP.TYPE))
     logs <- logs %>%
       filter(grepl("JV", TRIP.TYPE))
-  }else{
-    stop("type must be one of 'ft', 'ss', or 'jv'.", call. = FALSE)
   }
 
   dmp <- dmp %>%
@@ -130,8 +127,6 @@ get_catch <- function(dmp, logs, type){
 #' @param trip_type_colname the column name containing the trip type strings
 #'
 #' @return a data frame with the data removed for the trip types
-#'
-#' @examples
 remove_trip_data <- function(d, types, trip_type_colname){
   for(ty in types){
     gr <- grep(ty, d[[trip_type_colname]])
@@ -161,6 +156,92 @@ strip_lines <- function(file){
     writeLines(d, file)
   }
 }
+
+#' Read in sql code from a package file
+#'
+#' @param fn filename for sql code
+#'
+#' @return a vector of charcter strings, one for each line in `fn``
+read_sql <- function(fn) {
+  if(file.exists(system.file("sql", fn, package = "hakedata"))){
+    readLines(system.file("sql", fn, package = "hakedata"))
+  }else{
+    stop("The sql file does not exist.", call. = FALSE)
+  }
+}
+
+#' Inject SQL code for fihery categories and types based on the fleet type for hake
+#'
+#' @param sql SQL code as a vector of character strings (from [base::readLines()])
+#' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
+inject_fishery_filter <- function(sql, type){
+  if(!type %in% c("ft", "ss", "jv")){
+    stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
+  }
+
+  if(type == "ft"){
+    search_flag = "-- inject fishery categories here"
+    i <- suppressWarnings(grep(search_flag, sql))
+    sql[i] <- paste0("(c.TRIP_CATEGORY = 'OPT A - HAKE QUOTA (SHORESIDE)' or ",
+                     "c.TRIP_CATEGORY = 'OPT A - QUOTA') and ")
+    search_flag = "-- inject vessel codes here"
+    i <- suppressWarnings(grep(search_flag, sql))
+    sql[i] <- "("
+    for(j in 1:nrow(freezer_trawlers)){
+      sql[i] <- paste0(sql[i], "c.VESSEL_REGISTRATION_NUMBER = ", freezer_trawlers[j,]$FOS.ID, " or ")
+    }
+    sql[i] <- gsub(" or $", ") and ", sql[i])
+  }else if(type == "ss"){
+    search_flag = "-- inject fishery categories here"
+    i <- suppressWarnings(grep(search_flag, sql))
+    sql[i] <- paste0("(c.TRIP_CATEGORY = 'OPT A - HAKE QUOTA (SHORESIDE)' or ",
+                     "c.TRIP_CATEGORY = 'OPT A - QUOTA') and ")
+    search_flag = "-- inject vessel codes here"
+    i <- suppressWarnings(grep(search_flag, sql))
+    sql[i] <- "("
+    for(j in 1:nrow(freezer_trawlers)){
+      sql[i] <- paste0(sql[i], "c.VESSEL_REGISTRATION_NUMBER <> ", freezer_trawlers[j,]$FOS.ID, " and ")
+    }
+    sql[i] <- gsub(" and $", ") and ", sql[i])
+  }else if(type == "jv"){
+    search_flag = "-- inject fishery categories here"
+    i <- suppressWarnings(grep(search_flag, sql))
+    sql[i] <- "c.TRIP_CATEGORY = 'OPT A - HAKE QUOTA (JV)' and"
+  }
+sql
+}
+
+#' Run SQL code on the server database and return the records
+#'
+#' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
+#'
+#' @return a data frame of the records for the SQL code given
+#' @export
+#' @importFrom gfdata run_sql
+spatial_catch_sql <- function(type){
+  if(!type %in% c("ft", "ss", "jv")){
+    stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
+  }
+  if(type == "ft"){
+    sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), "ft")
+  }else if(type == "ss"){
+    sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), "ss")
+  }else if(type == "jv"){
+    sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), "jv")
+  }
+  run_sql("GFFOS", sql)
+}
+
+
+
+
+
+
+
+
+
+
+
 
 #' catch_by_day
 #'

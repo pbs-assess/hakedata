@@ -7,6 +7,9 @@ and [hakedata::logs_pattern] for filenames.}
 \usage{
 load_data()
 }
+\value{
+a list of two dataframes, one for the DMP data and one for the LOGS data
+}
 \description{
 Loads data from csv files found in the data directory. See [hakedata::landings_file]
 and [hakedata::logs_pattern] for filenames.

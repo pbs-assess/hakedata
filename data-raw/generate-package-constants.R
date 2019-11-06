@@ -5,6 +5,7 @@
 species_name <- "pacific hake"
 dmp_file <- "LandingsSpeciesDateDMP.csv"
 logs_pattern <- "^LogCatchReport[0-9]{4}\\.csv$"
+spatial_catch_sql_file <- "spatial-catch.sql"
 
 major_hake_areas <- c("03", "04", "05", "06", "07", "08", "09")
 
