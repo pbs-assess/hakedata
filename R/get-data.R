@@ -232,6 +232,31 @@ spatial_catch_sql <- function(type){
   run_sql("GFFOS", sql)
 }
 
+#' Save Hake data into an RDS file
+#'
+#' @export
+#' @importFrom gfdata cache_pbs_data
+cache_hake_data <- function(){
+  cache_pbs_data(225,
+                 file_name = "hake-data.rds",
+                 path = here("data-cache"))
+}
+
+#' Read in Hake data from RDS file
+#'
+#' @return the list of data
+#' @export
+get_hake_data <- function(){
+  file <- here("data-cache", "hake-data.rds")
+  if(file.exists(file)){
+    readRDS(file)
+  }else{
+    warning(file, " does not exist. Creating the file now...")
+    cache_hake_data()
+    readRDS(file)
+  }
+}
+
 
 
 
