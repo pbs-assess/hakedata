@@ -5,6 +5,7 @@
 #' @export
 #' @importFrom readr read_csv
 #' @importFrom purrr map reduce
+#' @importFrom here here
 load_data <- function(){
   data_path <- here("data")
 
@@ -21,11 +22,9 @@ load_data <- function(){
   names(dmp) <- gsub("\\)", "", names(dmp))
   dmp$LANDING.DATE <- gsub(" 00:00", "", dmp$LANDING.DATE)
   dmp$LANDING.DATE <- as.Date(dmp$LANDING.DATE, "%B %d %Y")
-  dmp <- dmp %>%
-    mutate(year = year(LANDING.DATE),
-           month = month(LANDING.DATE),
-           day = day(LANDING.DATE))
-  dmp <- remove_trip_data(dmp, c("GULF", "OPT B"), "LICENCE.TRIP.TYPE")
+  dmp <- remove_trip_data(dmp,
+                          types = c("GULF", "OPT B"),
+                          trip_type_colname = "LICENCE.TRIP.TYPE")
 
   # LOGS LANDINGS
   logs_files <- dir(data_path, pattern = logs_pattern)
@@ -36,38 +35,39 @@ load_data <- function(){
   names(logs) <- gsub(" +", ".", names(logs))
   names(logs) <- gsub("/", ".", names(logs))
   logs$LANDING.DATE <- as.Date(logs$LANDING.DATE, "%B %d %Y")
-  logs <- logs %>%
-    mutate(year = year(LANDING.DATE),
-           month = month(LANDING.DATE),
-           day = day(LANDING.DATE))
-  logs <- remove_trip_data(logs, c("GULF", "OPT B"), "TRIP.TYPE")
+  logs <- remove_trip_data(logs,
+                           types = c("GULF", "OPT B"),
+                           trip_type_colname = "TRIP.TYPE")
+  area4b <- NULL
   if(any(logs$AREA == "4B")){
-    area4b <<- filter(logs, AREA == "4B")
+    area4b <- filter(logs, AREA == "4B")
     logs <- filter(logs,
                    LANDING.PORT != "FRENCH CREEK",
                   !(AREA == "4B" && month < 6))
     warning("Some of the LOGS landings are in the 4B area. They ",
-            "are stored in the variable `area4b` for manual checking. ",
+            "are stored in the global variable `area4b` for manual checking. ",
             "All landings from French Creek were removed, and those landed ",
             "before June in 4B, but you may want to remove some other records.")
   }
-  list(dmp, logs)
+  list(dmp, logs, area4b)
 }
 
 #' Get the catch data from the DMP and LOGS data frames
 #'
-#' @param dmp The Dockside Monitoring Program data frame as extracted by [hakedata::load_data()]
-#' @param logs The Logbook data frame as extracted by [hakedata::load_data()]
+#' @param d a list of length 2 with elements being (1) The Dockside Monitoring Program
+#'  data frame as extracted by [hakedata::load_data()] and (2) the Logbook data frame
+#'  as extracted by [hakedata::load_data()]
 #' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
 #'
 #' @return a data frame containing only freezer trawler data
 #' @export
-#' @importFrom dplyr filter group_by summarize ungroup full_join
-get_catch <- function(dmp, logs, type){
+#' @importFrom dplyr filter group_by summarize ungroup full_join arrange
+get_catch <- function(d, type){
   if(!type %in% c("ft", "ss", "jv")){
     stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
   }
-
+  dmp <- d[[1]]
+  logs <- d[[2]]
   if(type == "ft" || type == "ss"){
     # If the non-JV vessel was fishing in JV, remove those catches
     dmp <- dmp %>%
@@ -79,7 +79,6 @@ get_catch <- function(dmp, logs, type){
   discards <- logs %>%
     filter(SOURCE == "ASOP",
            !is.na(RELEASED.WT))
-
   if(type == "ft"){
     dmp <- dmp %>%
       filter(VRN %in% freezer_trawlers$FOS.ID)
@@ -93,31 +92,39 @@ get_catch <- function(dmp, logs, type){
   }else if(type == "jv"){
     dmp <- dmp %>%
       filter(grepl("JV", LICENCE.TRIP.TYPE))
-    logs <- logs %>%
+    discards <- discards %>%
       filter(grepl("JV", TRIP.TYPE))
   }
-
   dmp <- dmp %>%
-    select(year, month, CONVERTED.WGHT.LBS) %>%
-    group_by(year, month) %>%
+    complete(LANDING.DATE = seq.Date(min(LANDING.DATE), max(LANDING.DATE), by = "day")) %>%
+    mutate(year = year(LANDING.DATE),
+           month = month(LANDING.DATE),
+           day = day(LANDING.DATE)) %>%
+    select(year, month, day, CONVERTED.WGHT.LBS) %>%
+    group_by(year, month, day) %>%
     summarize(landings = sum(CONVERTED.WGHT.LBS) / lbs_to_kilos,
               count =  n()) %>%
     ungroup()
   discards <- discards %>%
-    select(year, month, RELEASED.WT) %>%
-    group_by(year, month) %>%
+    complete(LANDING.DATE = seq.Date(min(LANDING.DATE), max(LANDING.DATE), by = "day")) %>%
+    mutate(year = year(LANDING.DATE),
+           month = month(LANDING.DATE),
+           day = day(LANDING.DATE)) %>%
+    select(year, month, day, RELEASED.WT) %>%
+    group_by(year, month, day) %>%
     summarize(landings = sum(RELEASED.WT) / lbs_to_kilos,
               count =  n()) %>%
     ungroup()
 
-  full_join(dmp, discards, by = c("year", "month")) %>%
-    group_by(year, month) %>%
+  full_join(dmp, discards, by = c("year", "month", "day")) %>%
+    group_by(year, month, day) %>%
     mutate(landings.x = ifelse(is.na(landings.x), 0, landings.x),
            landings.y = ifelse(is.na(landings.y), 0, landings.y)) %>%
     summarize(landings = landings.x + landings.y,
               landings_count = count.x,
               discards_count = count.y) %>%
-    ungroup()
+    ungroup() %>%
+    arrange(year, month, day)
 }
 
 #' Remove some trip types from a data frame
@@ -218,7 +225,9 @@ sql
 #' @return a data frame of the records for the SQL code given
 #' @export
 #' @importFrom gfdata run_sql
-spatial_catch_sql <- function(type){
+#' @importFrom tibble as_tibble
+#' @importFrom sf st_as_sf
+get_spatial_catch_sql <- function(type){
   if(!type %in% c("ft", "ss", "jv")){
     stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
   }
@@ -229,112 +238,33 @@ spatial_catch_sql <- function(type){
   }else if(type == "jv"){
     sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), "jv")
   }
-  run_sql("GFFOS", sql)
+  mutate(as_tibble(run_sql("GFFOS", sql)), fishery = type)
 }
 
-#' Save Hake data into an RDS file
+#' Merge all dataframes into one spatial dataframe. See [sf] package.
 #'
+#' @param ... dataframes to merge. They must all have the columns `X` and `Y`
+#' @param crs see [sf::st_sf()]
+#'
+#' @return a spatial data frame as described in the [sf] package
 #' @export
-#' @importFrom gfdata cache_pbs_data
-cache_hake_data <- function(){
-  cache_pbs_data(225,
-                 file_name = "hake-data.rds",
-                 path = here("data-cache"))
+#' @importFrom dplyr bind_rows
+merge_into_spatial <- function(..., crs = 4326){
+  dfs <- list(...)
+  lapply(1:length(dfs), function(x){
+    if(!"X" %in% names(dfs[[x]]) || !"Y" %in% names(dfs[[x]])){
+      stop("Data frame ", x, " does not have columns named 'X' and 'Y'.",
+           call. = FALSE)
+    }
+  })
+  d <- bind_rows(dfs)
+  st_as_sf(d,
+           coords = c("X", "Y"),
+           crs = crs,
+           na.fail = FALSE)
 }
 
-#' Read in Hake data from RDS file
-#'
-#' @return the list of data
-#' @export
-get_hake_data <- function(){
-  file <- here("data-cache", "hake-data.rds")
-  if(file.exists(file)){
-    readRDS(file)
-  }else{
-    warning(file, " does not exist. Creating the file now...")
-    cache_hake_data()
-    readRDS(file)
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-#' catch_by_day
-#'
-#' Calculate the catch by day for a given fishery
-#'
-#' @param d a list of data retrieved using gfdata package functions
-#' @param major_areas a vector of major stat areas as strings. e.g. "01" is 4B Strait of Georgia
-#' @param fishery the fishery to return the catch for. Default is all records. Uses the fishery_enum
-#'   function as an enumerator to shorten names.
-#' @param include_juandefuca Include the minor area of Juan De Fuca Strait which is located in major area 4B
-#' @param byarea If TRUE, data frame will be have one row per unique date & area. If FALSE,
-#'   there will be one unique row for each day
-#' @return the catch data frame
-#' @export
-#' @importFrom dplyr mutate group_by summarize filter bind_rows ungroup row_number
-#' @importFrom lubridate month day year
-#' @examples
-#' fetch_data()
-#' d <- load_data()
-#' ct <- catch_by_day(d)
-#' ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft)
-catch_by_day <- function(d,
-                         major_areas = major_hake_areas,
-                         fishery = fishery_enum()$all,
-                         include_juandefuca = TRUE,
-                         byarea = FALSE){
-
-  if(fishery == fishery_enum()$ss){
-    ct <- d$catch %>%
-      filter(!vessel_registration_number %in% freezer_trawlers$FOS.ID)
-  }else if(fishery == fishery_enum()$ft){
-    ct <- d$catch %>%
-      filter(vessel_registration_number %in% freezer_trawlers$FOS.ID)
-  }else if(fishery == fishery_enum()$jv){
-    ct <- d$catch %>%
-      filter(trip_type_name == "OPT A - HAKE QUOTA (JV)")
-  }else{ ## Assume catch from all fisheries
-    ct <- d$catch
-  }
-
-  d_out <- ct %>%
-    filter(fishery_sector == "GROUNDFISH TRAWL" &
-             major_stat_area_code %in% major_areas &
-             gear == "MIDWATER TRAWL")
-
-  if(include_juandefuca){
-    d_juandefuca <- ct %>%
-      filter(fishery_sector == "GROUNDFISH TRAWL" &
-               major_stat_area_code == "01" &
-               minor_stat_area_code == "20" &
-               gear == "MIDWATER TRAWL")
-
-    d_out <- bind_rows(d_out, d_juandefuca)
-  }
-
-  if(byarea){
-    d_out <- d_out %>%
-      group_by(best_date, major_stat_area_code)
-  }else{
-    d_out <- d_out %>%
-      group_by(best_date)
-  }
-  browser()
-  d_out %>%
-    summarize(total_catch = sum(landed_kg + discarded_kg),
-              num_landings = row_number()) %>%
-    ungroup()
-}
+# -------------------------------------------------------------------------------------------------
 
 get_comm_samples <- function(d,
                              major_areas = hakedata::major_hake_areas,
@@ -365,26 +295,25 @@ get_comm_samples <- function(d,
 #'
 #' @return the age/sex/length by year data frame
 #' @export
-#' @importFrom dplyr mutate transmute
+#' @importFrom dplyr mutate transmute %>%
 #' @importFrom lubridate month day year
 get_alw <- function(d){
   x <- d$survey_samples %>%
     mutate(year = year(trip_start_date)) %>%
     transmute(year, age, length, weight)
-  browser()
 }
 
-.onAttach <- function(pkgname, libname) {
-  ggplot2::theme_set(gfplot::theme_pbs())
-  sensitivity_colors <- c("#000000", RColorBrewer::brewer.pal(8L, "Dark2"))
-  assign("scale_colour_continuous", ggplot2::scale_colour_viridis_c)
-  assign("scale_fill_continuous", ggplot2::scale_fill_viridis_c)
-  assign("scale_colour_discrete",
-         function(..., values = sensitivity_colors)
-           scale_colour_manual(..., values = values),
-         globalenv())
-  assign("scale_fill_discrete",
-         function(..., values = sensitivity_colors)
-           scale_fill_manual(..., values = values),
-         globalenv())
-}
+# .onAttach <- function(pkgname, libname) {
+#   ggplot2::theme_set(gfplot::theme_pbs())
+#   sensitivity_colors <- c("#000000", RColorBrewer::brewer.pal(8L, "Dark2"))
+#   assign("scale_colour_continuous", ggplot2::scale_colour_viridis_c)
+#   assign("scale_fill_continuous", ggplot2::scale_fill_viridis_c)
+#   assign("scale_colour_discrete",
+#          function(..., values = sensitivity_colors)
+#            scale_colour_manual(..., values = values),
+#          globalenv())
+#   assign("scale_fill_discrete",
+#          function(..., values = sensitivity_colors)
+#            scale_fill_manual(..., values = values),
+#          globalenv())
+# }

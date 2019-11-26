@@ -1,5 +1,6 @@
 globalVariables(c(
   "AREA",
+  "area4b",
   "CONVERTED.WGHT.LBS",
   "Date",
   "LANDING.DATE",
@@ -15,6 +16,7 @@ globalVariables(c(
   "count.x",
   "count.y",
   "cumu_catch",
+  "cumu_day",
   "discarded_kg",
   "dmp_file",
   "fishery_enum",
@@ -23,6 +25,7 @@ globalVariables(c(
   "gear",
   "here",
   "landed_kg",
+  "landings",
   "landings.x",
   "landings.y",
   "lbs_to_kilos",

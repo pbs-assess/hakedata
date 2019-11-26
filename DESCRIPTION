@@ -19,6 +19,8 @@ Imports:
   RColorBrewer,
   purrr,
   readr,
+  scales,
+  sf,
   tidyr
 RoxygenNote: 6.1.1
 Remotes: github::pbs-assess/hakedata

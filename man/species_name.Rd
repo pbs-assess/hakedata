@@ -4,12 +4,14 @@
 \name{species_name}
 \alias{species_name}
 \title{Constants for the hakedata package}
-\format{An object of class \code{character} of length 1.}
+\format{A character string}
 \usage{
 species_name
 }
 \description{
-species code, data frame of freezer trawler vessel codes,
-and hake major areas are included
+A dataset containing the major statistical area codes and descriptions.
+}
+\details{
+Name of the species
 }
 \keyword{datasets}

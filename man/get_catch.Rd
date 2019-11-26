@@ -4,12 +4,12 @@
 \alias{get_catch}
 \title{Get the catch data from the DMP and LOGS data frames}
 \usage{
-get_catch(dmp, logs, type)
+get_catch(d, type)
 }
 \arguments{
-\item{dmp}{The Dockside Monitoring Program data frame as extracted by [hakedata::load_data()]}
-
-\item{logs}{The Logbook data frame as extracted by [hakedata::load_data()]}
+\item{d}{a list of length 2 with elements being (1) The Dockside Monitoring Program
+data frame as extracted by [hakedata::load_data()] and (2) the Logbook data frame
+as extracted by [hakedata::load_data()]}
 
 \item{type}{one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively}
 }

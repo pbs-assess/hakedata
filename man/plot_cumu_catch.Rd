@@ -9,7 +9,7 @@ plot_cumu_catch(d, inc_years = (year(now()) - 5):year(now()),
   horiz_line_spacing = NA)
 }
 \arguments{
-\item{d}{Data frame as output from catch_by_day()}
+\item{d}{Data frame as output from [get_catch()]}
 
 \item{inc_years}{Years to include in the plot}
 
@@ -17,18 +17,14 @@ plot_cumu_catch(d, inc_years = (year(now()) - 5):year(now()),
 
 \item{ylim}{Vector of 2, Y-axis limits}
 
-\item{horiz_line_spacing}{}
+\item{line_thickness}{thickness of the lines}
+
+\item{horiz_line_spacing}{spacing to draw horizontal dotted lines at. If NA,
+no lines will be plotted}
 }
 \value{
 A ggplot object
 }
 \description{
 Plot the cumulative catch for the given years
-}
-\examples{
-d <- load_data()
-ct <- catch_by_day(d)
-ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft)
-plot_cumu_catch(ct.ft, ylim = c(0, 45), horiz_line_spacing = 5)
-plot_cumu_catch(ct, horiz_line_spacing = 12.5)
 }

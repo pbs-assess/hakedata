@@ -9,7 +9,6 @@ spatial_catch_sql_file <- "spatial-catch.sql"
 
 major_hake_areas <- c("03", "04", "05", "06", "07", "08", "09")
 
-## Viking Alliance - new vessel
 freezer_trawlers <-
   tibble::tibble(Vessel = c("Viking Enterprise",
                             "Northern Alliance",
@@ -38,4 +37,5 @@ usethis::use_data(major_hake_areas, overwrite = TRUE)
 usethis::use_data(dmp_file, overwrite = TRUE)
 usethis::use_data(logs_pattern, overwrite = TRUE)
 usethis::use_data(lbs_to_kilos, overwrite = TRUE)
+usethis::use_data(spatial_catch_sql_file, overwrite = TRUE)
 

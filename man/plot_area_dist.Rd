@@ -22,10 +22,3 @@ A ggplot object
 \description{
 Plot distribution of catch by area
 }
-\examples{
-d <- load_data()
-ct <- catch_by_day(d, byarea = TRUE)
-ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft, byarea = TRUE)
-plot_area_dist(ct.ft, ylim = c(0, 45))
-plot_area_dist(ct)
-}

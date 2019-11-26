@@ -6,7 +6,7 @@
 #' For example, the most recent year of data will always be
 #' black and the second most recent year will always be red.
 #'
-#' @param n The default number of colours to generate is 10.
+#' @param n.cols number of colors to return
 #'
 #' @importFrom RColorBrewer brewer.pal
 #' @export
@@ -15,7 +15,7 @@
 #' @return A vector of colours
 #'
 #' @examples
-#' n <-18
+#' n <- 17
 #' plot(data.frame(1:n, 1), col = plot_color(n), pch = 19, cex = 5)
 plot_color <- function(n.cols = 10) {
   base <- brewer.pal(name = "Set1", n = 9)
@@ -32,11 +32,13 @@ plot_color <- function(n.cols = 10) {
 #'
 #' Plot the cumulative catch for the given years
 #'
-#' @param d Data frame as output from catch_by_day()
+#' @param d Data frame as output from [get_catch()]
 #' @param inc_years Years to include in the plot
 #' @param weight_factor Divide catch values by this to scale y-axis
 #' @param ylim Vector of 2, Y-axis limits
-#' @param horiz_line_spacing
+#' @param horiz_line_spacing spacing to draw horizontal dotted lines at. If NA,
+#'  no lines will be plotted
+#' @param line_thickness thickness of the lines
 #'
 #' @return A ggplot object
 #' @export
@@ -46,13 +48,7 @@ plot_color <- function(n.cols = 10) {
 #' @importFrom dplyr n filter select mutate group_by summarize ungroup transmute
 #' @importFrom lubridate year now
 #' @importFrom tidyr complete
-#'
-#' @examples
-#' d <- load_data()
-#' ct <- catch_by_day(d)
-#' ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft)
-#' plot_cumu_catch(ct.ft, ylim = c(0, 45), horiz_line_spacing = 5)
-#' plot_cumu_catch(ct, horiz_line_spacing = 12.5)
+#' @importFrom scales comma
 plot_cumu_catch <- function(d,
                             inc_years = (year(now()) - 5):year(now()),
                             weight_factor = 1e6,
@@ -60,42 +56,22 @@ plot_cumu_catch <- function(d,
                             line_thickness = 1.5,
                             horiz_line_spacing = NA){
   d <- d %>%
-    mutate(Date = as.Date(best_date)) %>%
-    complete(Date = seq.Date(min(Date), max(Date), by = "day")) %>%
-    mutate(year = lubridate::year(Date)) %>%
     filter(year %in% inc_years) %>%
-    select(-best_date)
-
-  d$total_catch[is.na(d$total_catch)] <- 0
-  d$num_landings[is.na(d$num_landings)] <- 0
-
-  ## Aggregate by day to get total catch each day
-  d <- d %>%
-    group_by(Date) %>%
-    summarize(year = year[1],
-              total_catch = sum(total_catch) / weight_factor) %>%
-    ungroup()
-
-  ## Cumulative sums by year
-  d <- d %>%
     group_by(year) %>%
-    mutate(day = seq(1, n()),
-           cumu_catch = cumsum(total_catch)) %>%
-    ungroup()
-
-  d <- d %>%
+    mutate(cumu_day = seq(1, n()),
+           cumu_catch = cumsum(landings) / weight_factor) %>%
+    ungroup() %>%
     transmute(year = as.factor(year),
-              day,
+              cumu_day,
               cumu_catch)
-
-  days.in.months <- c(0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  x.ticks <- cumsum(days.in.months)
+  days_in_months <- c(0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  x_ticks <- cumsum(days_in_months)
   mon <- c(month.abb, month.abb[1])
 
   colors <- plot_color(length(unique(d$year)))
 
   g <- ggplot2::ggplot(d) +
-    aes(x = day, y = cumu_catch, color = year) +
+    aes(x = cumu_day, y = cumu_catch, color = year) +
     geom_line(size = line_thickness) +
     scale_color_manual(values = colors) +
     theme(legend.position = c(0, 1),
@@ -103,9 +79,9 @@ plot_cumu_catch <- function(d,
           legend.title = element_blank(),
           legend.text = element_text(size = 12),
           legend.background = element_rect(fill = "white")) +
-    scale_y_continuous(labels = scales::comma,
+    scale_y_continuous(labels = comma,
                        limits = ylim) +
-    scale_x_continuous(breaks = x.ticks,
+    scale_x_continuous(breaks = x_ticks,
                        labels = mon) +
     ylab("Cumulative landings (thousand mt)") +
     xlab("Month")
@@ -130,12 +106,6 @@ plot_cumu_catch <- function(d,
 #'  geom_hline
 #' @importFrom dplyr n filter select mutate group_by summarize ungroup transmute
 #'
-#' @examples
-#' d <- load_data()
-#' ct <- catch_by_day(d, byarea = TRUE)
-#' ct.ft <- catch_by_day(d, fishery = fishery_enum()$ft, byarea = TRUE)
-#' plot_area_dist(ct.ft, ylim = c(0, 45))
-#' plot_area_dist(ct)
 plot_area_dist <- function(d,
                            inc_areas = major_hake_areas,
                            inc_years = (year(now()) - 5):year(now()),

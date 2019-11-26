@@ -7,7 +7,7 @@
 plot_color(n.cols = 10)
 }
 \arguments{
-\item{n}{The default number of colours to generate is 10.}
+\item{n.cols}{number of colors to return}
 }
 \value{
 A vector of colours
@@ -20,7 +20,7 @@ For example, the most recent year of data will always be
 black and the second most recent year will always be red.
 }
 \examples{
-n <-18
+n <- 17
 plot(data.frame(1:n, 1), col = plot_color(n), pch = 19, cex = 5)
 }
 \author{
