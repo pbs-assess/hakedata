@@ -17,14 +17,16 @@
 #' @examples
 #' n <- 17
 #' plot(data.frame(1:n, 1), col = plot_color(n), pch = 19, cex = 5)
-plot_color <- function(n.cols = 10) {
+plot_color <- function(n.cols = 10){
   base <- brewer.pal(name = "Set1", n = 9)
   colors <- c(base[(n.cols - 1):1], "#000000")
-  if (n.cols > 10 & n.cols < 18) {
+  if(n.cols > 10 & n.cols < 18){
     extra <- brewer.pal(name = "Set2", n = 7)
     colors <- c(extra[(n.cols - 10):1], rev(base), "#000000")
   }
-  if (n.cols >= 18) stop(n.cols, " is too many colors, only 17 are allowed.")
+  if(n.cols >= 18){
+    stop(n.cols, " is too many colors, only 17 are allowed.", call. = FALSE)
+  }
   return(colors)
 }
 
