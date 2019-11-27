@@ -221,24 +221,31 @@ sql
 #' Run SQL code on the server database and return the records
 #'
 #' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
+#' @param overwrite_file if TRUE, and the function has been run before and an rds file generated,
+#'  overwrite this. If FALSE, run the SQL and generate the file.
 #'
 #' @return a data frame of the records for the SQL code given
 #' @export
 #' @importFrom gfdata run_sql
 #' @importFrom tibble as_tibble
-#' @importFrom sf st_as_sf
-get_spatial_catch_sql <- function(type){
-  if(!type %in% c("ft", "ss", "jv")){
+#' @importFrom dplyr mutate
+get_spatial_catch_sql <- function(type, overwrite_file = FALSE){
+
+  if(type == "ft"){
+    file <- here("data-cache", hake_catch_ft_file)
+  }else if(type == "ss"){
+    file <- here("data-cache", hake_catch_ss_file)
+  }else if(type == "jv"){
+    file <- here("data-cache", hake_catch_jv_file)
+  }else{
     stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
   }
-  if(type == "ft"){
-    sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), "ft")
-  }else if(type == "ss"){
-    sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), "ss")
-  }else if(type == "jv"){
-    sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), "jv")
+  if(overwrite_file || !file.exists(file)){
+    sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), type)
+    d <- mutate(as_tibble(run_sql("GFFOS", sql)), fishery = type)
+    saveRDS(d, file)
   }
-  mutate(as_tibble(run_sql("GFFOS", sql)), fishery = type)
+  readRDS(file)
 }
 
 #' Merge all dataframes into one spatial dataframe. See [sf] package.

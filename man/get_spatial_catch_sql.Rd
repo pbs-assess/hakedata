@@ -4,10 +4,13 @@
 \alias{get_spatial_catch_sql}
 \title{Run SQL code on the server database and return the records}
 \usage{
-get_spatial_catch_sql(type)
+get_spatial_catch_sql(type, overwrite_file = FALSE)
 }
 \arguments{
 \item{type}{one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively}
+
+\item{overwrite_file}{if TRUE, and the function has been run before and an rds file generated,
+overwrite this. If FALSE, run the SQL and generate the file.}
 }
 \value{
 a data frame of the records for the SQL code given
