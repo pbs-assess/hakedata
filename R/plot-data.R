@@ -96,7 +96,7 @@ plot_cumu_catch <- function(d,
 
 #' Plot distribution of catch by area
 #'
-#' @param d Data frame as output from catch_by_day()
+#' @param d Data frame as output from [hakedata::get_catch()]
 #' @param inc_areas Areas to include in the plot
 #' @param inc_years Years to include in the plot
 #' @param ylim Vector of 2, Y-axis limits
