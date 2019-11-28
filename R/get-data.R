@@ -1,6 +1,6 @@
-#' Loads data from csv files found in the data directory. See [hakedata::landings_file]
-#' and [hakedata::logs_pattern] for filenames.
+#' Loads data from csv files found in the data directory.
 #'
+#' @description See [dmp_file] and [logs_pattern] for descriptions of filenames
 #' @return a list of two dataframes, one for the DMP data and one for the LOGS data
 #' @export
 #' @importFrom readr read_csv

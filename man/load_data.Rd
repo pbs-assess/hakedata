@@ -2,8 +2,7 @@
 % Please edit documentation in R/get-data.R
 \name{load_data}
 \alias{load_data}
-\title{Loads data from csv files found in the data directory. See \link[hakedata:landings_file]{hakedata::landings_file}
-and \link[hakedata:logs_pattern]{hakedata::logs_pattern} for filenames.}
+\title{Loads data from csv files found in the data directory.}
 \usage{
 load_data()
 }
@@ -11,6 +10,5 @@ load_data()
 a list of two dataframes, one for the DMP data and one for the LOGS data
 }
 \description{
-Loads data from csv files found in the data directory. See \link[hakedata:landings_file]{hakedata::landings_file}
-and \link[hakedata:logs_pattern]{hakedata::logs_pattern} for filenames.
+See \link{dmp_file} and \link{logs_pattern} for descriptions of filenames
 }
