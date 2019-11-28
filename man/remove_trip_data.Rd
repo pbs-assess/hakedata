@@ -7,9 +7,9 @@
 remove_trip_data(d, types, trip_type_colname)
 }
 \arguments{
-\item{d}{the data frame with a column named the same as `trip_type_colname`}
+\item{d}{the data frame with a column named the same as \code{trip_type_colname}}
 
-\item{types}{a vector of strings to grep for in the `trip_type_colname` column for removal}
+\item{types}{a vector of strings to grep for in the \code{trip_type_colname} column for removal}
 
 \item{trip_type_colname}{the column name containing the trip type strings}
 }

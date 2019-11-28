@@ -2,18 +2,18 @@
 % Please edit documentation in R/get-data.R
 \name{merge_into_spatial}
 \alias{merge_into_spatial}
-\title{Merge all dataframes into one spatial dataframe. See [sf] package.}
+\title{Merge all dataframes into one spatial dataframe. See \link{sf} package.}
 \usage{
 merge_into_spatial(..., crs = 4326)
 }
 \arguments{
-\item{...}{dataframes to merge. They must all have the columns `X` and `Y`}
+\item{...}{dataframes to merge. They must all have the columns \code{X} and \code{Y}}
 
-\item{crs}{see [sf::st_sf()]}
+\item{crs}{see \code{\link[sf:st_sf]{sf::st_sf()}}}
 }
 \value{
-a spatial data frame as described in the [sf] package
+a spatial data frame as described in the \link{sf} package
 }
 \description{
-Merge all dataframes into one spatial dataframe. See [sf] package.
+Merge all dataframes into one spatial dataframe. See \link{sf} package.
 }

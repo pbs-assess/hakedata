@@ -8,7 +8,7 @@ plot_area_dist(d, inc_areas = major_hake_areas,
   inc_years = (year(now()) - 5):year(now()), ylim = c(0, 1300))
 }
 \arguments{
-\item{d}{Data frame as output from [hakedata::get_catch()]}
+\item{d}{Data frame as output from \code{\link[=get_catch]{get_catch()}}}
 
 \item{inc_areas}{Areas to include in the plot}
 

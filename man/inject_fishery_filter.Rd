@@ -7,7 +7,7 @@
 inject_fishery_filter(sql, type)
 }
 \arguments{
-\item{sql}{SQL code as a vector of character strings (from [base::readLines()])}
+\item{sql}{SQL code as a vector of character strings (from \code{\link[base:readLines]{base::readLines()}})}
 
 \item{type}{one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively}
 }

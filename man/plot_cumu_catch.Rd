@@ -9,7 +9,7 @@ plot_cumu_catch(d, inc_years = (year(now()) - 5):year(now()),
   horiz_line_spacing = NA)
 }
 \arguments{
-\item{d}{Data frame as output from [get_catch()]}
+\item{d}{Data frame as output from \code{\link[=get_catch]{get_catch()}}}
 
 \item{inc_years}{Years to include in the plot}
 
