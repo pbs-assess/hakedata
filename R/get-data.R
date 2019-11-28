@@ -1,7 +1,9 @@
-#' Loads data from csv files found in the data directory.
+#' Loads data from csv files found in the data directory
 #'
 #' @description See [dmp_file] and [logs_pattern] for descriptions of filenames
-#' @return a list of two dataframes, one for the DMP data and one for the LOGS data
+#' @return A list of three dataframes, `[[1]]` for the DMP data, `[[2]]` for the LOGS data, and `[[3]]` for the area 4B
+#'   data which were not included. `[[3]]` is returned as a convinience for you to see if any other data from area 4B
+#'   should be included
 #' @export
 #' @importFrom readr read_csv
 #' @importFrom purrr map reduce
@@ -55,11 +57,10 @@ load_data <- function(){
 #' Get the catch data from the DMP and LOGS data frames
 #'
 #' @param d a list of length 2 with elements being (1) The Dockside Monitoring Program
-#'  data frame as extracted by [hakedata::load_data()] and (2) the Logbook data frame
-#'  as extracted by [hakedata::load_data()]
-#' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
-#'
-#' @return a data frame containing only freezer trawler data
+#'  data frame as extracted by [load_data()] and (2) the Logbook data frame
+#'  as extracted by [load_data()]
+#' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, or Joint Venture respectively
+#' @return A data frame containing only data for the type given by `type`
 #' @export
 #' @importFrom dplyr filter group_by summarize ungroup full_join arrange
 get_catch <- function(d, type){
@@ -129,11 +130,11 @@ get_catch <- function(d, type){
 
 #' Remove some trip types from a data frame
 #'
-#' @param d the data frame with a column named the same as `trip_type_colname`
-#' @param types a vector of strings to grep for in the `trip_type_colname` column for removal
-#' @param trip_type_colname the column name containing the trip type strings
-#'
-#' @return a data frame with the data removed for the trip types
+#' @param d A data frame containing the column `trip_type_colname`
+#' @param types A vector of strings to grep for in the `trip_type_colname` column for removal
+#' @param trip_type_colname The column name containing the trip type strings
+#' @return A data frame with the data removed for the trip types
+#' @export
 remove_trip_data <- function(d, types, trip_type_colname){
   for(ty in types){
     gr <- grep(ty, d[[trip_type_colname]])
@@ -144,9 +145,12 @@ remove_trip_data <- function(d, types, trip_type_colname){
   d
 }
 
-#' Strip the first n lines off a file, and re-save
+#' Strip header lines of LOGBOOK file
 #'
-#' @param file filename
+#' @description Search the file for the first occurance of the line starting with 'LOGBOOK'
+#'   and remove it, and any following blank lines leaving only the column headers and data.
+#'   Overwrite the file with this.
+#' @param file filename (csv file)
 strip_lines <- function(file){
   d <- readLines(file)
   if(length(grep("^LOGBOOK", d[1]))){
@@ -164,9 +168,9 @@ strip_lines <- function(file){
   }
 }
 
-#' Read in sql code from a package file
+#' Read in SQL code from a package file
 #'
-#' @param fn filename for sql code
+#' @param fn Filename for SQL code
 #'
 #' @return a vector of charcter strings, one for each line in `fn``
 read_sql <- function(fn) {
@@ -177,9 +181,12 @@ read_sql <- function(fn) {
   }
 }
 
-#' Inject SQL code for fihery categories and types based on the fleet type for hake
+#' Inject SQL code for fishery categories and types based on the fleet type
 #'
-#' @param sql SQL code as a vector of character strings (from [base::readLines()])
+#' @description Injects GFBIO VESSEL_REGISTRATION_NUMBERs where '-- inject vessel codes here' appear in the SQL code and
+#' and TRIP_CATEGORYs where '-- inject fishery categories here' appear
+#'
+#' @param sql SQL code as a vector of character strings (from [readLines()])
 #' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
 inject_fishery_filter <- function(sql, type){
   if(!type %in% c("ft", "ss", "jv")){
@@ -220,11 +227,11 @@ sql
 
 #' Run SQL code on the server database and return the records
 #'
-#' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively
-#' @param overwrite_file if TRUE, and the function has been run before and an rds file generated,
+#' @param type One of 'ft', 'ss', or 'jv' for Freezer Trawler, Shoreside, and Joint Venture respectively
+#' @param overwrite_file If TRUE, and the function has been run before and an rds file generated,
 #'  overwrite this. If FALSE, run the SQL and generate the file.
 #'
-#' @return a data frame of the records for the SQL code given
+#' @return A data frame of the records returned for the SQL code given
 #' @export
 #' @importFrom gfdata run_sql
 #' @importFrom tibble as_tibble
@@ -251,7 +258,7 @@ get_spatial_catch_sql <- function(type, overwrite_file = FALSE){
   readRDS(file)
 }
 
-#' Merge all dataframes into one spatial dataframe. See [sf] package.
+#' Merge all dataframes into one spatial dataframe. See [sf] package
 #'
 #' @param ... dataframes to merge. They must all have the columns `X` and `Y`
 #' @param crs see [sf::st_sf()]
@@ -314,17 +321,3 @@ get_alw <- function(d){
     transmute(year, age, length, weight)
 }
 
-# .onAttach <- function(pkgname, libname) {
-#   ggplot2::theme_set(gfplot::theme_pbs())
-#   sensitivity_colors <- c("#000000", RColorBrewer::brewer.pal(8L, "Dark2"))
-#   assign("scale_colour_continuous", ggplot2::scale_colour_viridis_c)
-#   assign("scale_fill_continuous", ggplot2::scale_fill_viridis_c)
-#   assign("scale_colour_discrete",
-#          function(..., values = sensitivity_colors)
-#            scale_colour_manual(..., values = values),
-#          globalenv())
-#   assign("scale_fill_discrete",
-#          function(..., values = sensitivity_colors)
-#            scale_fill_manual(..., values = values),
-#          globalenv())
-# }

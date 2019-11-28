@@ -2,12 +2,14 @@
 % Please edit documentation in R/get-data.R
 \name{load_data}
 \alias{load_data}
-\title{Loads data from csv files found in the data directory.}
+\title{Loads data from csv files found in the data directory}
 \usage{
 load_data()
 }
 \value{
-a list of two dataframes, one for the DMP data and one for the LOGS data
+A list of three dataframes, \code{[[1]]} for the DMP data, \code{[[2]]} for the LOGS data, and \code{[[3]]} for the area 4B
+data which were not included. \code{[[3]]} is returned as a convinience for you to see if any other data from area 4B
+should be included
 }
 \description{
 See \link{dmp_file} and \link{logs_pattern} for descriptions of filenames

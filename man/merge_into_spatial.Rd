@@ -2,7 +2,7 @@
 % Please edit documentation in R/get-data.R
 \name{merge_into_spatial}
 \alias{merge_into_spatial}
-\title{Merge all dataframes into one spatial dataframe. See \link{sf} package.}
+\title{Merge all dataframes into one spatial dataframe. See \link{sf} package}
 \usage{
 merge_into_spatial(..., crs = 4326)
 }
@@ -15,5 +15,5 @@ merge_into_spatial(..., crs = 4326)
 a spatial data frame as described in the \link{sf} package
 }
 \description{
-Merge all dataframes into one spatial dataframe. See \link{sf} package.
+Merge all dataframes into one spatial dataframe. See \link{sf} package
 }

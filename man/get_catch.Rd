@@ -8,13 +8,13 @@ get_catch(d, type)
 }
 \arguments{
 \item{d}{a list of length 2 with elements being (1) The Dockside Monitoring Program
-data frame as extracted by \code{\link[hakedata:load_data]{hakedata::load_data()}} and (2) the Logbook data frame
-as extracted by \code{\link[hakedata:load_data]{hakedata::load_data()}}}
+data frame as extracted by \code{\link[=load_data]{load_data()}} and (2) the Logbook data frame
+as extracted by \code{\link[=load_data]{load_data()}}}
 
-\item{type}{one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively}
+\item{type}{one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, or Joint Venture respectively}
 }
 \value{
-a data frame containing only freezer trawler data
+A data frame containing only data for the type given by \code{type}
 }
 \description{
 Get the catch data from the DMP and LOGS data frames

@@ -2,16 +2,16 @@
 % Please edit documentation in R/get-data.R
 \name{read_sql}
 \alias{read_sql}
-\title{Read in sql code from a package file}
+\title{Read in SQL code from a package file}
 \usage{
 read_sql(fn)
 }
 \arguments{
-\item{fn}{filename for sql code}
+\item{fn}{Filename for SQL code}
 }
 \value{
 a vector of charcter strings, one for each line in `fn``
 }
 \description{
-Read in sql code from a package file
+Read in SQL code from a package file
 }

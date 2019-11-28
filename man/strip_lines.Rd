@@ -2,13 +2,15 @@
 % Please edit documentation in R/get-data.R
 \name{strip_lines}
 \alias{strip_lines}
-\title{Strip the first n lines off a file, and re-save}
+\title{Strip header lines of LOGBOOK file}
 \usage{
 strip_lines(file)
 }
 \arguments{
-\item{file}{filename}
+\item{file}{filename (csv file)}
 }
 \description{
-Strip the first n lines off a file, and re-save
+Search the file for the first occurance of the line starting with 'LOGBOOK'
+and remove it, and any following blank lines leaving only the column headers and data.
+Overwrite the file with this.
 }

@@ -2,15 +2,16 @@
 % Please edit documentation in R/get-data.R
 \name{inject_fishery_filter}
 \alias{inject_fishery_filter}
-\title{Inject SQL code for fihery categories and types based on the fleet type for hake}
+\title{Inject SQL code for fishery categories and types based on the fleet type}
 \usage{
 inject_fishery_filter(sql, type)
 }
 \arguments{
-\item{sql}{SQL code as a vector of character strings (from \code{\link[base:readLines]{base::readLines()}})}
+\item{sql}{SQL code as a vector of character strings (from \code{\link[=readLines]{readLines()}})}
 
 \item{type}{one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, and Joint Venture respectively}
 }
 \description{
-Inject SQL code for fihery categories and types based on the fleet type for hake
+Injects GFBIO VESSEL_REGISTRATION_NUMBERs where '-- inject vessel codes here' appear in the SQL code and
+and TRIP_CATEGORYs where '-- inject fishery categories here' appear
 }
