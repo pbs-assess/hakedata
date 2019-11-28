@@ -102,7 +102,7 @@ get_catch <- function(d, type){
            day = day(LANDING.DATE)) %>%
     select(year, month, day, CONVERTED.WGHT.LBS) %>%
     group_by(year, month, day) %>%
-    summarize(landings = sum(CONVERTED.WGHT.LBS) / lbs_to_kilos,
+    summarize(landings = sum(CONVERTED.WGHT.LBS) * lbs_to_kilos,
               count =  n()) %>%
     ungroup()
   discards <- discards %>%
@@ -112,7 +112,7 @@ get_catch <- function(d, type){
            day = day(LANDING.DATE)) %>%
     select(year, month, day, RELEASED.WT) %>%
     group_by(year, month, day) %>%
-    summarize(landings = sum(RELEASED.WT) / lbs_to_kilos,
+    summarize(landings = sum(RELEASED.WT) * lbs_to_kilos,
               count =  n()) %>%
     ungroup()
 
@@ -230,7 +230,10 @@ sql
 #' @importFrom tibble as_tibble
 #' @importFrom dplyr mutate
 get_spatial_catch_sql <- function(type, overwrite_file = FALSE){
-
+  cache_dir <- here("data-cache")
+  if(!dir.exists(cache_dir)){
+    dir.create(cache_dir)
+  }
   if(type == "ft"){
     file <- here("data-cache", hake_catch_ft_file)
   }else if(type == "ss"){
@@ -256,6 +259,7 @@ get_spatial_catch_sql <- function(type, overwrite_file = FALSE){
 #' @return a spatial data frame as described in the [sf] package
 #' @export
 #' @importFrom dplyr bind_rows
+#' @importFrom sf st_as_sf
 merge_into_spatial <- function(..., crs = 4326){
   dfs <- list(...)
   lapply(1:length(dfs), function(x){

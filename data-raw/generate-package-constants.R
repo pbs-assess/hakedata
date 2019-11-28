@@ -32,7 +32,7 @@ freezer_trawlers <-
 
 shoreside_trip_type <- 12764
 jv_trip_type <- 12766
-lbs_to_kilos <- 2.20462262
+lbs_to_kilos <- 0.4535924
 
 usethis::use_data(dmp_file, overwrite = TRUE)
 usethis::use_data(spatial_catch_sql_file, overwrite = TRUE)
