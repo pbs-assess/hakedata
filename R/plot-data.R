@@ -113,6 +113,8 @@ plot_area_dist <- function(d,
                            inc_years = (year(now()) - 5):year(now()),
                            ylim = c(0, 1300)){
 
+  browser()
+
   d_out <- d %>%
     mutate(year = year(best_date),
            area = major_stat_area_code) %>%
@@ -121,8 +123,6 @@ plot_area_dist <- function(d,
     dplyr::select(-best_date) %>%
     group_by(year, area) %>%
     summarize(landings = sum(num_landings))
-
-browser()
 
 
 

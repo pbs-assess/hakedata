@@ -4,16 +4,16 @@
 \alias{merge_into_spatial}
 \title{Merge all dataframes into one spatial dataframe. See \link{sf} package}
 \usage{
-merge_into_spatial(..., crs = 4326)
+merge_into_spatial(...)
 }
 \arguments{
-\item{...}{dataframes to merge. They must all have the columns \code{X} and \code{Y}}
-
-\item{crs}{see \code{\link[sf:st_sf]{sf::st_sf()}}}
+\item{...}{Dataframes to merge. They must all have the columns \code{X} and \code{Y}}
 }
 \value{
 a spatial data frame as described in the \link{sf} package
 }
 \description{
-Merge all dataframes into one spatial dataframe. See \link{sf} package
+This function merges all data frames into a single \link{sf} data frame. It also
+removes points founds on land or way out of the fishing area. The Fishing IDs (FIDs) for
+this filtration were found using \code{\link[mapview:mapview]{mapview::mapview()}}.
 }
