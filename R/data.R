@@ -44,3 +44,12 @@
 #'
 #' @format A character string
 "logs_pattern"
+#' A list of length-3 lists containing points which can be used to generate contour lines on the BC coast
+#'
+#' @format A list
+"bc_bathymetry"
+#' An sf class POINT which represents a point at the lower rightmost part of the fishery distribution
+#' to be used to measure disctance to other point for removal of outlier points
+#'
+#' @format An sf POINT object
+"far_point"
