@@ -31,15 +31,19 @@ contours_as_sfg <- function(lst, vals, crs = 4326){
 #' @param d An `sf` `POINT` object
 #' @param min_num_fids Minimum number of FIDs in a cell. If less than this, they will be set to zero
 #' @param cell_size Cell side length in meters
+#' @param data_col A vector of column names found in `d` to be summed and appended to the return data frame
 #'
-#' @return An `sf` `MULTIPOLYGON` object with columns added: `cell` and `num_fids`
+#' @return A list of length 2 with the first element being an `sf` `MULTIPOLYGON` object with
+#'   columns added: `cell` and `num_fids`, and the second element being the number of cells removed
+#'   due to the filtering of data to accomodate the rule of `min_num_fids`
 #' @export
 #' @importFrom sf st_make_grid st_cast st_as_sf st_transform st_within st_intersects st_crs<-
-#' @importFrom dplyr mutate filter left_join summarize group_by
+#' @importFrom dplyr mutate filter left_join summarize group_by summarize_at ungroup
 #' @importFrom tibble as_tibble
 make_grid <- function(d,
                       cell_size = 10000,
-                      min_num_fids = 3){
+                      min_num_fids = 3,
+                      data_col = NA){
   stopifnot("sf" %in% class(d),
             length(min_num_fids) == 1,
             is.numeric(min_num_fids),
@@ -56,27 +60,26 @@ make_grid <- function(d,
   num_in_cells <- d %>%
     as_tibble() %>%
     group_by(cell) %>%
-    summarize(num_fids = n())
+    summarize(num_fids = n()) %>%
+    ungroup()
   jj <- st_cast(j, "MULTIPOLYGON")
   jj_tbl <- as_tibble(jj) %>%
     mutate(cell = 1:n()) %>%
     left_join(num_in_cells, by = "cell")
-  message("Number of cells removed due to privacy restrictions: ", nrow(jj_tbl %>% filter(num_fids < min_num_fids)))
-  jj_tbl %>%
-    mutate(num_fids = ifelse(is.na(num_fids), 0, num_fids))%>%
-    filter(num_fids >= min_num_fids) %>%
-    st_as_sf()
-  # if(cut_coast){
-  #   coast <- coast_10m
-  #   coast <- coast %>%
-  #     `st_crs<-`(4326) %>%
-  #     st_transform(crs = 3347)
-  #   k <- st_within(jj, coast)
-  #   k_tbl <- as_tibble(k)
-  #   cut_cells <- unique(k_tbl$col.id)
-  #   jj_tbl <- as_tibble(jj)
-  #   jj <- jj_tbl %>%
-  #     filter(!cell %in% cut_cells) %>%
-  #     st_as_sf()
-  # }
+  if(!is.na(data_col[1])){
+    vals_in_cells <- d %>%
+      as_tibble() %>%
+      group_by(cell) %>%
+      summarize_at(data_col, sum) %>%
+      ungroup()
+    jj_tbl <- jj_tbl %>%
+      left_join(vals_in_cells, by = "cell")
+  }
+  num_cells_removed <- nrow(jj_tbl %>% filter(num_fids < min_num_fids))
+  message("Number of cells removed due to privacy restrictions: ", num_cells_removed)
+  list(jj_tbl %>%
+         mutate(num_fids = ifelse(is.na(num_fids), 0, num_fids))%>%
+         filter(num_fids >= min_num_fids) %>%
+         st_as_sf(),
+       num_cells_removed)
 }

@@ -4,7 +4,7 @@
 \alias{make_grid}
 \title{Create a grid based on fishing event data.}
 \usage{
-make_grid(d, cell_size = 10000, min_num_fids = 3)
+make_grid(d, cell_size = 10000, min_num_fids = 3, data_col = NA)
 }
 \arguments{
 \item{d}{An \code{sf} \code{POINT} object}
@@ -12,9 +12,13 @@ make_grid(d, cell_size = 10000, min_num_fids = 3)
 \item{cell_size}{Cell side length in meters}
 
 \item{min_num_fids}{Minimum number of FIDs in a cell. If less than this, they will be set to zero}
+
+\item{data_col}{A vector of column names found in \code{d} to be summed and appended to the return data frame}
 }
 \value{
-An \code{sf} \code{MULTIPOLYGON} object with columns added: \code{cell} and \code{num_fids}
+A list of length 2 with the first element being an \code{sf} \code{MULTIPOLYGON} object with
+columns added: \code{cell} and \code{num_fids}, and the second element being the number of cells removed
+due to the filtering of data to accomodate the rule of \code{min_num_fids}
 }
 \description{
 Creates a grid of cells for which fishing event data exist. The cells with zero fishing

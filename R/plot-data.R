@@ -97,7 +97,8 @@ plot_cumu_catch <- function(d,
 #' Spatial plot of data by block
 #'
 #'
-#' @param grd A grid of spatial data as created using the [make_grid()] function
+#' @param grd A list of length 2, the output of the [make_grid()] function
+#' @param data_col The column in the `grd` data frame to use as the plotting value
 #' @param crs See [contours_as_sfg()]
 #' @param extents A data frame with two columns, named 'lon' and 'lat' which represent the
 #'   extents of the plotting area. The data frame must have two rows and two columns
@@ -108,19 +109,23 @@ plot_cumu_catch <- function(d,
 #'
 #' @return A ggplot object
 #' @export
-#' @importFrom ggplot2 ggplot aes geom_sf scale_fill_viridis_c coord_sf
+#' @importFrom ggplot2 ggplot aes geom_sf scale_fill_viridis_c coord_sf aes_string
 #' @importFrom ggspatial annotation_scale annotation_north_arrow north_arrow_orienteering north_arrow_fancy_orienteering
 #' @importFrom sf st_as_sf st_crs<- st_coordinates
 #' @importFrom rnaturalearth ne_countries
 #' @importFrom tibble as_tibble
 #' @importFrom grDevices contourLines
 plot_spatial <- function(grd,
+                         data_col = "num_fids",
                          crs = 4326,
                          extents = data.frame(lon = c(-135, -122),
                                               lat = c(48, 55)),
                          contour_depths = c(100, 200, 400, 1000, 1500, 2000),
                          contour_color = "lightblue",
                          contour_thickness = 0.25){
+
+  num_removed <- grd[[2]]
+  grd <- grd[[1]]
 
   world <- ne_countries(scale = "large", returnclass = "sf")
   world_proj <- world %>% `st_crs<-`(crs)
@@ -142,7 +147,7 @@ plot_spatial <- function(grd,
     }
   }
 
-  g <- g + geom_sf(aes(fill = num_fids),
+  g <- g + geom_sf(aes_string(fill = data_col),
                    data = grd) +
     scale_fill_viridis_c(option = "C", trans = "sqrt", alpha = 0.4) +
     coord_sf(xlim = extents[[1]],
