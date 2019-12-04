@@ -104,6 +104,7 @@ plot_cumu_catch <- function(d,
 #' @param contour_depths A vector of depths to plot. Must be already present in the contour data
 #'   ([bc_bathymetry]). If NA, no contours will be plotted
 #' @param contour_color Color for the contour lines
+#' @param contour_thickness Thickness of contour lines
 #'
 #' @return A ggplot object
 #' @export
@@ -118,7 +119,8 @@ plot_spatial <- function(grd,
                          extents = data.frame(lon = c(-135, -122),
                                               lat = c(48, 55)),
                          contour_depths = c(100, 200, 400, 1000, 1500, 2000),
-                         contour_color = "lightblue"){
+                         contour_color = "lightblue",
+                         contour_thickness = 0.25){
 
   world <- ne_countries(scale = "large", returnclass = "sf")
   world_proj <- world %>% `st_crs<-`(crs)
@@ -128,7 +130,7 @@ plot_spatial <- function(grd,
     as_tibble()
 
   g <- ggplot(data = world_proj) +
-    geom_sf(color = "royalblue", fill = "antiquewhite", size = 1)
+    geom_sf(color = "royalblue", fill = "antiquewhite")
 
   # Contour lines
   bc_isob <- contourLines(bc_bathymetry, levels = contour_depths)
@@ -136,7 +138,7 @@ plot_spatial <- function(grd,
   if(!is.na(contour_depths[1])){
     for(i in seq_along(contour_depths)){
       g <- g +
-        geom_sf(data = bc_contours[[i]], color = contour_color)
+        geom_sf(data = bc_contours[[i]], color = contour_color, size = contour_thickness)
     }
   }
 

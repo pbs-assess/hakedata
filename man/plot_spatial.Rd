@@ -6,7 +6,7 @@
 \usage{
 plot_spatial(grd, crs = 4326, extents = data.frame(lon = c(-135, -122),
   lat = c(48, 55)), contour_depths = c(100, 200, 400, 1000, 1500, 2000),
-  contour_color = "lightblue")
+  contour_color = "lightblue", contour_thickness = 0.5)
 }
 \arguments{
 \item{grd}{A grid of spatial data as created using the \code{\link[=make_grid]{make_grid()}} function}
@@ -20,6 +20,8 @@ extents of the plotting area. The data frame must have two rows and two columns}
 (\link{bc_bathymetry}). If NA, no contours will be plotted}
 
 \item{contour_color}{Color for the contour lines}
+
+\item{contour_thickness}{Thickness of contour lines}
 }
 \value{
 A ggplot object
