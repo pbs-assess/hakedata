@@ -94,36 +94,60 @@ plot_cumu_catch <- function(d,
   g
 }
 
-#' Plot distribution of catch by area
+#' Spatial plot of data by block
 #'
-#' @param d Data frame as output from [get_catch()]
-#' @param inc_areas Areas to include in the plot
-#' @param inc_years Years to include in the plot
-#' @param ylim Vector of 2, Y-axis limits
+#'
+#' @param grd A grid of spatial data as created using the [make_grid()] function
+#' @param crs See [contours_as_sfg()]
+#' @param extents A data frame with two columns, named 'lon' and 'lat' which represent the
+#'   extents of the plotting area. The data frame must have two rows and two columns
+#' @param contour_depths A vector of depths to plot. Must be already present in the contour data
+#'   ([bc_bathymetry]). If NA, no contours will be plotted
+#' @param contour_color Color for the contour lines
 #'
 #' @return A ggplot object
 #' @export
-#' @importFrom ggplot2 aes geom_point geom_line scale_color_manual theme element_blank
-#'  element_text element_rect scale_y_continuous scale_x_continuous ylab xlab
-#'  geom_hline
-#' @importFrom dplyr n filter select mutate group_by summarize ungroup transmute
-#'
-plot_area_dist <- function(d,
-                           inc_areas = major_hake_areas,
-                           inc_years = (year(now()) - 5):year(now()),
-                           ylim = c(0, 1300)){
+#' @importFrom ggplot2 ggplot aes geom_sf scale_fill_viridis_c coord_sf
+#' @importFrom ggspatial annotation_scale annotation_north_arrow north_arrow_orienteering north_arrow_fancy_orienteering
+#' @importFrom sf st_as_sf st_crs<- st_coordinates
+#' @importFrom rnaturalearth ne_countries
+#' @importFrom tibble as_tibble
+#' @importFrom grDevices contourLines
+plot_spatial <- function(grd,
+                         crs = 4326,
+                         extents = data.frame(lon = c(-135, -122),
+                                              lat = c(48, 55)),
+                         contour_depths = c(100, 200, 400, 1000, 1500, 2000),
+                         contour_color = "lightblue"){
 
-  browser()
+  world <- ne_countries(scale = "large", returnclass = "sf")
+  world_proj <- world %>% `st_crs<-`(crs)
+  extents <- st_as_sf(extents, coords = c("lon", "lat")) %>%
+    `st_crs<-`(crs) %>%
+    st_coordinates() %>%
+    as_tibble()
 
-  d_out <- d %>%
-    mutate(year = year(best_date),
-           area = major_stat_area_code) %>%
-    dplyr::filter(area %in% inc_areas,
-                  year %in% inc_years) %>%
-    dplyr::select(-best_date) %>%
-    group_by(year, area) %>%
-    summarize(landings = sum(num_landings))
+  g <- ggplot(data = world_proj) +
+    geom_sf(color = "royalblue", fill = "antiquewhite", size = 1)
 
+  # Contour lines
+  bc_isob <- contourLines(bc_bathymetry, levels = contour_depths)
+  bc_contours <- contours_as_sfg(bc_isob, contour_depths)
+  if(!is.na(contour_depths[1])){
+    for(i in seq_along(contour_depths)){
+      g <- g +
+        geom_sf(data = bc_contours[[i]], color = contour_color)
+    }
+  }
 
-
+  g <- g + geom_sf(aes(fill = num_fids),
+                   data = grd) +
+    scale_fill_viridis_c(option = "C", trans = "sqrt", alpha = 0.4) +
+    coord_sf(xlim = extents[[1]],
+             ylim = extents[[2]]) +
+    annotation_scale(location = "bl", width_hint = 0.5) +
+    annotation_north_arrow(location = "bl", which_north = "true",
+                           pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+                           style = north_arrow_fancy_orienteering)
+  g
 }

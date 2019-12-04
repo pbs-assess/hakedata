@@ -46,7 +46,7 @@ load_data <- function(){
     logs <- filter(logs,
                    LANDING.PORT != "FRENCH CREEK",
                   !(AREA == "4B" && month < 6))
-    warning("Some of the LOGS landings are in the 4B area. They ",
+    message("Some of the LOGS landings are in the 4B area. They ",
             "are stored in the global variable `area4b` for manual checking. ",
             "All landings from French Creek were removed, and those landed ",
             "before June in 4B, but you may want to remove some other records.")

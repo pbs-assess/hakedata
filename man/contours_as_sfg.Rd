@@ -4,13 +4,15 @@
 \alias{contours_as_sfg}
 \title{Convert output from the \code{\link[grDevices:contourLines]{grDevices::contourLines()}} function to an \link[sf:sfc]{sf::sfc} object}
 \usage{
-contours_as_sfg(lst, vals)
+contours_as_sfg(lst, vals, crs = 4326)
 }
 \arguments{
 \item{lst}{List as returned from the \code{\link[grDevices:contourLines]{grDevices::contourLines()}} function}
 
 \item{vals}{A vector of depth values to use. Each will be filtered and the returned list will
 hakev one element for each depth}
+
+\item{crs}{Coordinate reference system represented by an integer}
 }
 \value{
 An \link[sf:sfc]{sf::sfc} object

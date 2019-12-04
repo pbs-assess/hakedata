@@ -48,6 +48,11 @@
 #'
 #' @format A list
 "bc_bathymetry"
+#' An sf LINESTRING object which contains data for 10m resolution for the world coastline. Data source:
+#' #' http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/physical/ne_10m_coastline.zip
+#'
+#' @format An sf LINESTRING object
+"coast_10m"
 #' An sf class POINT which represents a point at the lower rightmost part of the fishery distribution
 #' to be used to measure disctance to other point for removal of outlier points
 #'
