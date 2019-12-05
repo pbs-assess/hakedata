@@ -32,6 +32,8 @@ contours_as_sfg <- function(lst, vals, crs = 4326){
 #' @param min_num_fids Minimum number of FIDs in a cell. If less than this, they will be set to zero
 #' @param cell_size Cell side length in meters
 #' @param data_col A vector of column names found in `d` to be summed and appended to the return data frame
+#' @param data_fncs A vector of functions to use for summarization of the `data_col` columns. Must be the same
+#'   length as the `data_col` vector
 #'
 #' @return A list of length 2 with the first element being an `sf` `MULTIPOLYGON` object with
 #'   columns added: `cell` and `num_fids`, and the second element being the number of cells removed
@@ -43,17 +45,21 @@ contours_as_sfg <- function(lst, vals, crs = 4326){
 make_grid <- function(d,
                       cell_size = 10000,
                       min_num_fids = 3,
-                      data_col = NA){
+                      data_col = NA,
+                      data_fncs = NA){
   stopifnot("sf" %in% class(d),
             length(min_num_fids) == 1,
             is.numeric(min_num_fids),
-            min_num_fids >= 0)
+            min_num_fids >= 0,
+            length(data_col) == length(data_fncs))
 
-  j <- st_make_grid(d, cellsize = cell_size) %>%
-    st_transform(crs = 3347)
+  j <- st_make_grid(d, cellsize = cell_size)
   wth <- st_within(d, j)
-  wth_tf <- lengths(wth)
+  # Within TRUE/FALSE vector
+  wth_tf <- as.logical(lengths(wth))
+  # Only allow points found within grid cells
   d <- d[wth_tf, ]
+  # Convert from 'Sparse geometry binary predicate (sgbp)' object to tibble
   wth_tbl <- as_tibble(wth)
   d <- d %>%
     mutate(cell = wth_tbl$col.id)
@@ -70,7 +76,7 @@ make_grid <- function(d,
     vals_in_cells <- d %>%
       as_tibble() %>%
       group_by(cell) %>%
-      summarize_at(data_col, sum) %>%
+      summarize_at(data_col, data_fncs) %>%
       ungroup()
     jj_tbl <- jj_tbl %>%
       left_join(vals_in_cells, by = "cell")
