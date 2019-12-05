@@ -107,9 +107,13 @@ make_grid <- function(d,
 #' @importFrom sf st_as_sf st_distance st_coordinates st_transform
 merge_into_spatial <- function(...){
   dfs <- list(...)
-  lapply(1:length(dfs), function(x){
+  lapply(seq_len(length(dfs)), function(x){
     if(!"X" %in% names(dfs[[x]]) || !"Y" %in% names(dfs[[x]])){
       stop("Data frame ", x, " does not have columns named 'X' and 'Y'.",
+           call. = FALSE)
+    }
+    if(nrow(dfs[[x]]) == 0){
+      stop("Data frame ", x, " does not have any rows.",
            call. = FALSE)
     }
   })
