@@ -17,8 +17,7 @@ contours_as_sfg <- function(lst, vals, crs = 4326){
       st_linestring(as.matrix(data.frame(x = j$x, y = j$y)))
     })
     ret_lst[[i]] <- st_sfc(lines) %>%
-      st_set_crs(crs) #%>%
-      #st_transform(crs = 3347)
+      st_set_crs(crs)
   }
   ret_lst
 }
