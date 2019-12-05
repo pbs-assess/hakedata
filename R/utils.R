@@ -55,7 +55,7 @@ make_grid <- function(d,
 
   j <- st_make_grid(d, cellsize = cell_size)
   wth <- st_within(d, j)
-  # Within TRUE/FALSE vector
+  # Within grid cells TRUE/FALSE vector
   wth_tf <- as.logical(lengths(wth))
   # Only allow points found within grid cells
   d <- d[wth_tf, ]
@@ -63,6 +63,7 @@ make_grid <- function(d,
   wth_tbl <- as_tibble(wth)
   d <- d %>%
     mutate(cell = wth_tbl$col.id)
+  # Compute number of fishing events and join them into the main table
   num_in_cells <- d %>%
     as_tibble() %>%
     group_by(cell) %>%
@@ -73,6 +74,7 @@ make_grid <- function(d,
     mutate(cell = 1:n()) %>%
     left_join(num_in_cells, by = "cell")
   if(!is.na(data_col[1])){
+    # Compute summaries of data columns and join them into the main table
     vals_in_cells <- d %>%
       as_tibble() %>%
       group_by(cell) %>%
@@ -83,6 +85,9 @@ make_grid <- function(d,
   }
   num_cells_removed <- nrow(jj_tbl %>% filter(num_fids < min_num_fids))
   message("Number of cells removed due to privacy restrictions: ", num_cells_removed)
+  # Filter for the number of fishing events required per cell before returning
+  # Note this may not be enough for some species, vessel ID should be looked at and
+  # if there are not at least `min_num_fids` of them the cell should be rejected
   list(jj_tbl %>%
          mutate(num_fids = ifelse(is.na(num_fids), 0, num_fids))%>%
          filter(num_fids >= min_num_fids) %>%
