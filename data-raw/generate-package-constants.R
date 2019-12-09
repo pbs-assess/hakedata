@@ -45,7 +45,7 @@ usethis::use_data(freezer_trawlers, overwrite = TRUE)
 usethis::use_data(major_hake_areas, overwrite = TRUE)
 usethis::use_data(logs_pattern, overwrite = TRUE)
 usethis::use_data(lbs_to_kilos, overwrite = TRUE)
-usethis::use_data(far_point, overwrite = TRUE)
+#usethis::use_data(far_point, overwrite = TRUE)
 
 # Note the far_point.rda data is a single point in the sf class representing the lowest-right point in the hake fishery spatially
 # across all fisheries (all FIDs). This was recorded using code found in the pbs-assess/hake/R/get-data.R and saved in the data
