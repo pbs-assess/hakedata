@@ -258,50 +258,6 @@ get_spatial_catch_sql <- function(type, overwrite_file = FALSE){
   readRDS(file)
 }
 
-
-#' Fetch commercial hake data from the database or local file
-#'
-#' @param rerun_query Run the query to fetch data, and re-write the RDS file for future use.
-#' @param major_areas The major statistical areas to include in the data
-#' @param include_juandefuca Include the Strait of Juan De Fuca in the data? TREU/FALSE
-#'
-#' @return A data frame of the all the commercial samples for hake found in the areas given
-#' @export
-#' @importFrom gfdata get_commercial_samples
-#' @importFrom dplyr filter mutate group_by summarize ungroup bind_rows
-#' @importFrom here here
-get_comm_samples <- function(rerun_query = FALSE,
-                             major_areas = major_hake_areas,
-                             include_juandefuca = TRUE){
-  fn <- here("data/hake-commercial.rds")
-  if(rerun_query){
-    unlink(fn, force = TRUE)
-  }
-  if(file.exists(fn)){
-    d <- readRDS(fn)
-  }else{
-    d <- get_commercial_samples(225)
-    saveRDS(d, fn)
-  }
-  d_out <- d %>%
-    filter(major_stat_area_code %in% major_areas)
-
-  if(include_juandefuca){
-    d_juandefuca <- d %>%
-      filter(major_stat_area_code == "01",
-             minor_stat_area_code == "20")
-
-    d_out <- bind_rows(d_out, d_juandefuca) %>%
-      mutate(year = year(trip_start_date),
-             month = month(trip_start_date)) %>%
-      group_by(year, month) %>%
-      summarize(total_catch = sum(landed_kg + discarded_kg),
-                num_landings = n()) %>%
-      ungroup()
-  }
-  d_out
-}
-
 #' get_alw
 #'
 #' @param d a list of data retrieved using gfplot package functions
