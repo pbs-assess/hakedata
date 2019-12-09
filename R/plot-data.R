@@ -99,6 +99,7 @@ plot_cumu_catch <- function(d,
 #'
 #' @param grd A list of length 2, the output of the [make_grid()] function
 #' @param data_col The column in the `grd` data frame to use as the plotting value
+#' @param data_factor Value to divide the `data_col` values by in the `grd` data frame
 #' @param crs See [contours_as_sfg()]
 #' @param extents A data frame with two columns, named 'lon' and 'lat' which represent the
 #'   extents of the plotting area. The data frame must have two rows and two columns
@@ -117,6 +118,7 @@ plot_cumu_catch <- function(d,
 #' @importFrom grDevices contourLines
 plot_spatial <- function(grd,
                          data_col = "num_fids",
+                         data_factor = 1,
                          crs = 4326,
                          extents = data.frame(lon = c(-135, -122),
                                               lat = c(48, 55)),
@@ -146,6 +148,8 @@ plot_spatial <- function(grd,
         geom_sf(data = bc_contours[[i]], color = contour_color, size = contour_thickness)
     }
   }
+
+  grd[[data_col]] <- grd[[data_col]] / data_factor
 
   g <- g + geom_sf(aes_string(fill = data_col),
                    data = grd) +
