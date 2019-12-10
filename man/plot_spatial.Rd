@@ -4,7 +4,7 @@
 \alias{plot_spatial}
 \title{Spatial plot of data by block}
 \usage{
-plot_spatial(grd, data_col = "num_fids", crs = 4326,
+plot_spatial(grd, data_col = "num_fids", data_factor = 1, crs = 4326,
   extents = data.frame(lon = c(-135, -122), lat = c(48, 55)),
   contour_depths = c(100, 200, 400, 1000, 1500, 2000),
   contour_color = "lightblue", contour_thickness = 0.25)
@@ -13,6 +13,8 @@ plot_spatial(grd, data_col = "num_fids", crs = 4326,
 \item{grd}{A list of length 2, the output of the \code{\link[=make_grid]{make_grid()}} function}
 
 \item{data_col}{The column in the \code{grd} data frame to use as the plotting value}
+
+\item{data_factor}{Value to divide the \code{data_col} values by in the \code{grd} data frame}
 
 \item{crs}{See \code{\link[=contours_as_sfg]{contours_as_sfg()}}}
 

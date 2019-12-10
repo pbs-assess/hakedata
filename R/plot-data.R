@@ -162,3 +162,72 @@ plot_spatial <- function(grd,
                            style = north_arrow_fancy_orienteering)
   g
 }
+
+#' Plot depth boxplots by year (catchdate) or histograms for a single year
+#'
+#' @param d The data frame as returned by the spatial SQL queries found in this in
+#'   the variable `spatial_catch_sql_file`
+#' @param plot_type Type of plot, one of 'hist' or 'box'
+#' @param fishery_type One of NA, 'ft', 'ss', or 'jv'. If NA, all fisheries will be plotted against one another,
+#'   if one of the others, that will be filtered before plotting
+#' @param bin_width See [ggplot2::geom_histogram()]
+#' @param max_depth_shown Maximum depth to be shown. All records with a greater depth are filtered out
+#'   prior to plotting using [dplyr::filter()]
+#' @param alpha Transparency of fill from 0 - 1
+#' @param legend_loc Where to place legend "inside" or "outside" the frame of the plot
+#'
+#' @return A [ggplot2] object
+#' @export
+#' @importFrom dplyr filter mutate
+#' @importFrom ggplot2 aes geom_boxplot geom_histogram xlab ylab guides guide_legend
+#' @importFrom grid unit
+plot_depths <- function(d,
+                        plot_type = "hist",
+                        fishery_type = NA,
+                        bin_width = 10,
+                        max_depth_shown = 600,
+                        alpha = 0.6,
+                        legend_loc = "inside"){
+  stopifnot(plot_type %in% c("hist", "box"))
+  if(!is.na(fishery_type)){
+    if(!fishery_type %in% c("ft", "ss", "jv")){
+      stop("`fishery_type` must be one of NA, 'ft', 'ss', or 'jv'", call. = FALSE)
+    }
+    d <- d %>%
+      filter(fishery %in% fishery_type)
+  }
+
+  d <- d %>%
+    filter(!is.na(fdep),
+           fdep <= max_depth_shown) %>%
+    mutate(yr = factor(year(catchdate)),
+           fishery = toupper(fishery))
+  if(plot_type == "hist"){
+    g <- ggplot(data = d) +
+      geom_histogram(aes(x = fdep, fill = fishery),
+                     color = "#e9ecef",
+                     alpha = alpha,
+                     position = 'identity',
+                     binwidth = bin_width) +
+      xlab("Depth") +
+      ylab("Number of tows")
+  }else{
+    g <- ggplot(data = d) +
+      geom_boxplot(aes(x = yr, y = fdep, fill = fishery),
+                   alpha = alpha) +
+      xlab("Year") +
+      ylab("Depth (m)")
+  }
+  g <- g +
+    scale_fill_manual(values = c("#69b3a2", "#404080")) +
+    guides(fill = guide_legend(title = "Fishery")) +
+    theme(legend.justification = c(1, 1),
+          legend.key.height = unit(30, units = "points"))
+
+  if(legend_loc == "inside"){
+    g <- g +
+      theme(legend.position = c(1, 1))
+  }
+
+  g
+}

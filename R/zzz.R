@@ -1,12 +1,15 @@
 globalVariables(c(
   "AREA",
   "area4b",
+  "catchdate",
   "cell",
   "coast_10m",
   "CONVERTED.WGHT.LBS",
   "Date",
   "far_point",
+  "fdep",
   "FID",
+  "fishery",
   "geometry",
   "LANDING.DATE",
   "LANDING.PORT",
@@ -51,5 +54,6 @@ globalVariables(c(
   "trip_start_date",
   "trip_type_name",
   "vessel_registration_number",
-  "weight"
+  "weight",
+  "yr"
 ))
