@@ -16,6 +16,7 @@ Imports:
   dplyr,
   lubridate,
   here,
+  magrittr,
   tibble,
   RColorBrewer,
   rnaturalearth,

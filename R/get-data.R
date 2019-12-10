@@ -236,6 +236,7 @@ sql
 #' @importFrom gfdata run_sql
 #' @importFrom tibble as_tibble
 #' @importFrom dplyr mutate
+#' @importFrom magrittr %>%
 get_spatial_catch_sql <- function(type, overwrite_file = FALSE){
   cache_dir <- here("data-cache")
   if(!dir.exists(cache_dir)){
@@ -257,18 +258,3 @@ get_spatial_catch_sql <- function(type, overwrite_file = FALSE){
   }
   readRDS(file)
 }
-
-#' get_alw
-#'
-#' @param d a list of data retrieved using gfplot package functions
-#'
-#' @return the age/sex/length by year data frame
-#' @export
-#' @importFrom dplyr mutate transmute %>%
-#' @importFrom lubridate month day year
-get_alw <- function(d){
-  x <- d$survey_samples %>%
-    mutate(year = year(trip_start_date)) %>%
-    transmute(year, age, length, weight)
-}
-

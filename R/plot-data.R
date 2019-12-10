@@ -231,3 +231,53 @@ plot_depths <- function(d,
 
   g
 }
+
+#' Plot length distributions as histograms
+#'
+#' @param yrs Which years to include in the data to plot. If NA, all years in the `Years` column
+#'   will be used
+#' @param bin_width See [ggplot2::geom_histogram()]
+#' @param max_length_shown Maximum length to be shown. All records with a greater length are filtered out
+#'   prior to plotting using [dplyr::filter()]
+#' @param alpha Transparency of fill from 0 - 1
+#' @param legend_loc Where to place legend "inside" or "outside" the frame of the plot
+#'
+#' @return A [ggplot2] object
+#' @export
+#' @importFrom dplyr filter mutate
+#' @importFrom ggplot2 aes geom_histogram xlab ylab guides guide_legend scale_fill_manual theme
+plot_lengths <- function(yrs = NA,
+                         bin_width = 5,
+                         max_length_shown = 100,
+                         alpha = 0.6,
+                         legend_loc = "inside"){
+  d <- read_csv(here("data/hake_domestic_obs_len_wt_age.csv")) %>%
+    mutate(fishery = ifelse(VESSEL_ID %in% freezer_trawlers$GFBIO.ID, "FT", "SS")) %>%
+    filter(!is.na(Length_cm),
+           Length_cm <= max_length_shown)
+  if(!is.na(yrs)){
+    d <- d %>%
+      filter(Year %in% yrs)
+  }
+  g <- ggplot(data = d) +
+    geom_histogram(aes(x = Length_cm, fill = fishery),
+                   color = "#e9ecef",
+                   alpha = alpha,
+                   position = 'identity',
+                   binwidth = bin_width) +
+    xlab("Length") +
+    ylab("Number of tows")
+
+  g <- g +
+    scale_fill_manual(values = c("#69b3a2", "#404080")) +
+    guides(fill = guide_legend(title = "Fishery")) +
+    theme(legend.justification = c(1, 1),
+          legend.key.height = unit(30, units = "points"))
+
+  if(legend_loc == "inside"){
+    g <- g +
+      theme(legend.position = c(1, 1))
+  }
+
+  g
+}
