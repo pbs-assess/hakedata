@@ -24,6 +24,7 @@ Imports:
   readr,
   scales,
   sf,
+  stats,
   tidyr
 RoxygenNote: 6.1.1
 Roxygen: list(markdown = TRUE)

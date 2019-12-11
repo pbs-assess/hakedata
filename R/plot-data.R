@@ -171,21 +171,21 @@ plot_spatial <- function(grd,
 #' @param fishery_type One of NA, 'ft', 'ss', or 'jv'. If NA, all fisheries will be plotted against one another,
 #'   if one of the others, that will be filtered before plotting
 #' @param bin_width See [ggplot2::geom_histogram()]
-#' @param max_depth_shown Maximum depth to be shown. All records with a greater depth are filtered out
-#'   prior to plotting using [dplyr::filter()]
+#' @param xlim Limits for the x-axis. For c(NA, NA), plot will extend to limits of data
 #' @param alpha Transparency of fill from 0 - 1
 #' @param legend_loc Where to place legend "inside" or "outside" the frame of the plot
 #'
 #' @return A [ggplot2] object
 #' @export
-#' @importFrom dplyr filter mutate
-#' @importFrom ggplot2 aes geom_boxplot geom_histogram xlab ylab guides guide_legend
+#' @importFrom dplyr filter mutate summarize
+#' @importFrom ggplot2 aes geom_boxplot geom_histogram xlab ylab guides guide_legend scale_x_continuous geom_vline
 #' @importFrom grid unit
+#' @importFrom stats quantile
 plot_depths <- function(d,
                         plot_type = "hist",
                         fishery_type = NA,
                         bin_width = 10,
-                        max_depth_shown = 600,
+                        xlim = c(NA, NA),
                         alpha = 0.6,
                         legend_loc = "inside"){
   stopifnot(plot_type %in% c("hist", "box"))
@@ -198,17 +198,25 @@ plot_depths <- function(d,
   }
 
   d <- d %>%
-    filter(!is.na(fdep),
-           fdep <= max_depth_shown) %>%
+    filter(!is.na(fdep)) %>%
     mutate(yr = factor(year(catchdate)),
            fishery = toupper(fishery))
   if(plot_type == "hist"){
+    med <- d %>%
+      group_by(fishery) %>%
+      summarize(low = quantile(fdep)[2],
+                hi = quantile(fdep)[4],
+                fdep = quantile(fdep)[3])
     g <- ggplot(data = d) +
       geom_histogram(aes(x = fdep, fill = fishery),
                      color = "#e9ecef",
                      alpha = alpha,
                      position = 'identity',
                      binwidth = bin_width) +
+      geom_vline(data = med, aes(xintercept = fdep, col = fishery), size = 1.25, show.legend = FALSE) +
+      geom_vline(data = med, aes(xintercept = low, col = fishery), size = 1.25, linetype = "dashed", show.legend = FALSE) +
+      geom_vline(data = med, aes(xintercept = hi, col = fishery), size = 1.252, linetype = "dashed", show.legend = FALSE) +
+      scale_x_continuous(limits = xlim) +
       xlab("Depth") +
       ylab("Number of tows")
   }else{
@@ -220,6 +228,7 @@ plot_depths <- function(d,
   }
   g <- g +
     scale_fill_manual(values = c("#69b3a2", "#404080")) +
+    scale_color_manual(values = c("#69b3a2", "#404080")) +
     guides(fill = guide_legend(title = "Fishery")) +
     theme(legend.justification = c(1, 1),
           legend.key.height = unit(30, units = "points"))
@@ -237,24 +246,22 @@ plot_depths <- function(d,
 #' @param yrs Which years to include in the data to plot. If NA, all years in the `Years` column
 #'   will be used
 #' @param bin_width See [ggplot2::geom_histogram()]
-#' @param max_length_shown Maximum length to be shown. All records with a greater length are filtered out
-#'   prior to plotting using [dplyr::filter()]
+#' @param xlim Limits for the x-axis. For c(NA, NA), plot will extend to limits of data
 #' @param alpha Transparency of fill from 0 - 1
 #' @param legend_loc Where to place legend "inside" or "outside" the frame of the plot
 #'
 #' @return A [ggplot2] object
 #' @export
 #' @importFrom dplyr filter mutate
-#' @importFrom ggplot2 aes geom_histogram xlab ylab guides guide_legend scale_fill_manual theme
+#' @importFrom ggplot2 aes geom_histogram xlab ylab guides guide_legend scale_fill_manual theme scale_x_continuous
 plot_lengths <- function(yrs = NA,
                          bin_width = 5,
-                         max_length_shown = 100,
+                         xlim = c(NA, NA),
                          alpha = 0.6,
                          legend_loc = "inside"){
   d <- read_csv(here("data/hake_domestic_obs_len_wt_age.csv")) %>%
     mutate(fishery = ifelse(VESSEL_ID %in% freezer_trawlers$GFBIO.ID, "FT", "SS")) %>%
-    filter(!is.na(Length_cm),
-           Length_cm <= max_length_shown)
+    filter(!is.na(Length_cm))
   if(!is.na(yrs)){
     d <- d %>%
       filter(Year %in% yrs)
@@ -266,13 +273,12 @@ plot_lengths <- function(yrs = NA,
                    position = 'identity',
                    binwidth = bin_width) +
     xlab("Length") +
-    ylab("Number of tows")
-
-  g <- g +
+    ylab("Number of specimens") +
     scale_fill_manual(values = c("#69b3a2", "#404080")) +
     guides(fill = guide_legend(title = "Fishery")) +
     theme(legend.justification = c(1, 1),
-          legend.key.height = unit(30, units = "points"))
+          legend.key.height = unit(30, units = "points")) +
+    scale_x_continuous(limits = xlim)
 
   if(legend_loc == "inside"){
     g <- g +

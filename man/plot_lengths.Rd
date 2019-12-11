@@ -4,7 +4,7 @@
 \alias{plot_lengths}
 \title{Plot length distributions as histograms}
 \usage{
-plot_lengths(yrs = NA, bin_width = 5, max_length_shown = 100,
+plot_lengths(yrs = NA, bin_width = 5, xlim = c(NA, NA),
   alpha = 0.6, legend_loc = "inside")
 }
 \arguments{
@@ -13,8 +13,7 @@ will be used}
 
 \item{bin_width}{See \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}}
 
-\item{max_length_shown}{Maximum length to be shown. All records with a greater length are filtered out
-prior to plotting using \code{\link[dplyr:filter]{dplyr::filter()}}}
+\item{xlim}{Limits for the x-axis. For c(NA, NA), plot will extend to limits of data}
 
 \item{alpha}{Transparency of fill from 0 - 1}
 
