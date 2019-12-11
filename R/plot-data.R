@@ -200,7 +200,8 @@ plot_depths <- function(d,
   d <- d %>%
     filter(!is.na(fdep)) %>%
     mutate(yr = factor(year(catchdate)),
-           fishery = toupper(fishery))
+           fishery = toupper(fishery),
+           fdep = fdep * 1.8288) # Convert fathoms to meters
   if(plot_type == "hist"){
     med <- d %>%
       group_by(fishery) %>%
@@ -217,7 +218,7 @@ plot_depths <- function(d,
       geom_vline(data = med, aes(xintercept = low, col = fishery), size = 1.25, linetype = "dashed", show.legend = FALSE) +
       geom_vline(data = med, aes(xintercept = hi, col = fishery), size = 1.252, linetype = "dashed", show.legend = FALSE) +
       scale_x_continuous(limits = xlim) +
-      xlab("Depth") +
+      xlab("Depth (m)") +
       ylab("Number of tows")
   }else{
     g <- ggplot(data = d) +
