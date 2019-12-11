@@ -63,6 +63,7 @@ load_data <- function(){
 #' @return A data frame containing only data for the type given by `type`
 #' @export
 #' @importFrom dplyr filter group_by summarize ungroup full_join arrange
+#' @importFrom lubridate year month day
 get_catch <- function(d, type){
   if(!type %in% c("ft", "ss", "jv")){
     stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
