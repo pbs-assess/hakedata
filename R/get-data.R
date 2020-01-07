@@ -1,11 +1,13 @@
 #' Fetch the DMP catch from the FOS database
 #'
-#' @return
+#' @param end_date The end date of the date extraction
+#' @param overwrite Logical. Overwrite the RDS files for DMP and LOGS data if they exist
+#'
+#' @return Nothing
 #' @export
 #'
 #' @importFrom gfdata run_sql
 #' @importFrom here here
-#'
 fetch_catch <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
                         overwrite = FALSE){
 
@@ -17,6 +19,7 @@ fetch_catch <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
     logs <- run_sql("GFBIOSQL", read_sql(logs_catch_sql_file))
     saveRDS(logs, here("data", logs_catch_data_raw_file))
   }
+
 }
 
 #' Loads data from csv files found in the data directory

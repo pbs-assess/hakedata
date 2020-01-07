@@ -3,7 +3,6 @@
 \docType{package}
 \name{hakedata}
 \alias{hakedata}
-\alias{hakedata-package}
 \title{hakedata package}
 \description{
 Extract Pacific hake data and plot it. Follow the instructions here:

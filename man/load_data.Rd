@@ -7,8 +7,8 @@
 load_data()
 }
 \value{
-A list of three dataframes, \code{[[1]]} for the DMP data, \code{[[2]]} for the LOGS data, and \code{[[3]]} for the area 4B
-data which were not included. \code{[[3]]} is returned as a convinience for you to see if any other data from area 4B
+A list of three dataframes, \verb{[[1]]} for the DMP data, \verb{[[2]]} for the LOGS data, and \verb{[[3]]} for the area 4B
+data which were not included. \verb{[[3]]} is returned as a convinience for you to see if any other data from area 4B
 should be included
 }
 \description{

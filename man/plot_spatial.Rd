@@ -4,10 +4,16 @@
 \alias{plot_spatial}
 \title{Spatial plot of data by block}
 \usage{
-plot_spatial(grd, data_col = "num_fids", data_factor = 1, crs = 4326,
+plot_spatial(
+  grd,
+  data_col = "num_fids",
+  data_factor = 1,
+  crs = 4326,
   extents = data.frame(lon = c(-135, -122), lat = c(48, 55)),
   contour_depths = c(100, 200, 400, 1000, 1500, 2000),
-  contour_color = "lightblue", contour_thickness = 0.25)
+  contour_color = "lightblue",
+  contour_thickness = 0.25
+)
 }
 \arguments{
 \item{grd}{A list of length 2, the output of the \code{\link[=make_grid]{make_grid()}} function}

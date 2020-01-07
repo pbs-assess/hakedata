@@ -4,9 +4,14 @@
 \alias{plot_cumu_catch}
 \title{Plot_cumu_catch}
 \usage{
-plot_cumu_catch(d, inc_years = (year(now()) - 5):year(now()),
-  weight_factor = 1e+06, ylim = c(0, 100), line_thickness = 1.5,
-  horiz_line_spacing = NA)
+plot_cumu_catch(
+  d,
+  inc_years = (year(now()) - 5):year(now()),
+  weight_factor = 1e+06,
+  ylim = c(0, 100),
+  line_thickness = 1.5,
+  horiz_line_spacing = NA
+)
 }
 \arguments{
 \item{d}{Data frame as output from \code{\link[=get_catch]{get_catch()}}}

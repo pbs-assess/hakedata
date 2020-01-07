@@ -8,6 +8,22 @@
 #'
 #' @format A character string
 "spatial_catch_sql_file"
+#' Name of the DMP catch SQL file
+#'
+#' @format A character string
+"dmp_catch_sql_file"
+#' Name of the LOGS catch SQL file
+#'
+#' @format A character string
+"logs_catch_sql_file"
+#' Name of the DMP catch rds file
+#'
+#' @format A character string
+"dmp_catch_data_raw_file"
+#' Name of the LOGS catch rds file
+#'
+#' @format A character string
+"logs_catch_data_raw_file"
 #' Name of the freezer trawler catch rds file
 #'
 #' @format A character string

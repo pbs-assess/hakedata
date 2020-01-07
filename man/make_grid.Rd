@@ -4,8 +4,13 @@
 \alias{make_grid}
 \title{Create a grid based on fishing event data.}
 \usage{
-make_grid(d, cell_size = 10000, min_num_fids = 3, data_col = NA,
-  data_fncs = NA)
+make_grid(
+  d,
+  cell_size = 10000,
+  min_num_fids = 3,
+  data_col = NA,
+  data_fncs = NA
+)
 }
 \arguments{
 \item{d}{An \code{sf} \code{POINT} object}

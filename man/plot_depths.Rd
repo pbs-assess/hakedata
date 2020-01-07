@@ -4,8 +4,15 @@
 \alias{plot_depths}
 \title{Plot depth boxplots by year (catchdate) or histograms for a single year}
 \usage{
-plot_depths(d, plot_type = "hist", fishery_type = NA, bin_width = 10,
-  xlim = c(NA, NA), alpha = 0.6, legend_loc = "inside")
+plot_depths(
+  d,
+  plot_type = "hist",
+  fishery_type = NA,
+  bin_width = 10,
+  xlim = c(NA, NA),
+  alpha = 0.6,
+  legend_loc = "inside"
+)
 }
 \arguments{
 \item{d}{The data frame as returned by the spatial SQL queries found in this in

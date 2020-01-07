@@ -4,8 +4,13 @@
 \alias{plot_lengths}
 \title{Plot length distributions as histograms}
 \usage{
-plot_lengths(yrs = NA, bin_width = 5, xlim = c(NA, NA),
-  alpha = 0.6, legend_loc = "inside")
+plot_lengths(
+  yrs = NA,
+  bin_width = 5,
+  xlim = c(NA, NA),
+  alpha = 0.6,
+  legend_loc = "inside"
+)
 }
 \arguments{
 \item{yrs}{Which years to include in the data to plot. If NA, all years in the \code{Years} column

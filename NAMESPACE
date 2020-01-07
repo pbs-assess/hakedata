@@ -2,6 +2,7 @@
 
 export(.onLoad)
 export(contours_as_sfg)
+export(fetch_catch)
 export(get_catch)
 export(get_spatial_catch_sql)
 export(hake_theme)
