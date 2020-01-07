@@ -1,3 +1,24 @@
+#' Fetch the DMP catch from the FOS database
+#'
+#' @return
+#' @export
+#'
+#' @importFrom gfdata run_sql
+#' @importFrom here here
+#'
+fetch_catch <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
+                        overwrite = FALSE){
+
+  if(overwrite || !file.exists(here("data", dmp_catch_data_raw_file))){
+    dmp <- run_sql("GFBIOSQL", read_sql(dmp_catch_sql_file))
+    saveRDS(dmp, here("data", dmp_catch_data_raw_file))
+  }
+  if(overwrite || !file.exists(here("data", logs_catch_data_raw_file))){
+    logs <- run_sql("GFBIOSQL", read_sql(logs_catch_sql_file))
+    saveRDS(logs, here("data", logs_catch_data_raw_file))
+  }
+}
+
 #' Loads data from csv files found in the data directory
 #'
 #' @description See [dmp_file] and [logs_pattern] for descriptions of filenames

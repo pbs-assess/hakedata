@@ -1,0 +1,67 @@
+-- This is a copy of the code found in the stored procedure on the SQL Server
+select * from openquery('
+
+SELECT ACT_TRIP.ACT_ID TRIP_ID,
+               '' LICENCE,
+               '' TRIP_TYPE,
+               '' VRN,
+               '' VESSEL,
+               '' SKIPPER,
+               '' LANDING_PORT,
+               '' HAIL_OUT_DATE,
+               '' LANDING_DATE,
+               '' SET_COUNT,
+               '' SETS_REVIEWED,
+               CRPT_LOG_HEADER.CRPT_SOURCE,
+               FISHRY_AREA.FA_NME AREA,
+               CATCH.SPECIES_SPECIES_CDE,
+               SPECIES_VW.SPECIES_COMMON_NME SPECIES_NAME,
+               DECODE(CATCH.SUBLEGAL_UNMARKETABLE_IND,0,'YES','NO') LEGAL_MARKETABLE,
+               SUM(DECODE(CATCH.CATCH_RELEASED,0,NVL(CATCH.CATCH_WT,0),0)) RET_WT,
+               SUM(DECODE(CATCH.CATCH_RELEASED,0,NVL(CATCH.CATCH_QTY,0),0)) RET_QTY,
+               SUM(DECODE(CATCH.CATCH_RELEASED,0,NVL(CATCH.BAIT_QTY,0),0)) BAIT_QTY,
+               SUM(DECODE(CATCH.CATCH_RELEASED,1,NVL(CATCH.CATCH_WT,0),0)) REL_WT,
+               SUM(DECODE(CATCH.CATCH_RELEASED,1,NVL(CATCH.CATCH_QTY,0),0)) REL_QTY,
+               SUM(NVL(CATCH.LICED_QTY,0)) LICED_QTY,
+               UTILIZATION.CATCHUTIL_DESC CATCH_UTILIZATION,
+               COMP_MTHD.SPECIES_COMP_MTHD_DESC COMP_METHOD,
+               DECODE(TRIP_HEADER.FSC_COMM_IND,1,'Yes','No') FSC_TRIP
+          FROM FOS_V1_1.CATCH,
+               FOS_V1_1.FISHING_EVENT,
+               FOS_V1_1.CATCH_REPORT CRPT_LOG_HEADER,
+               FOS_V1_1.ACTIVITY ACT_TRIP,
+               FOS_V1_1.TRIP_HEADER,
+               FOS_V1_1.SPECIES_VW,
+               FOS_V1_1.CDE_CATCHUTIL UTILIZATION,
+               FOS_V1_1.CDE_SPECIES_COMP_MTHD COMP_MTHD,
+               FOS_V1_1.FISHRY_AREA
+         WHERE CATCH.FE_FE_ID = FISHING_EVENT.FE_ID
+           AND FISHING_EVENT.CRPT_CRPT_ID = CRPT_LOG_HEADER.CRPT_ID
+           AND CRPT_LOG_HEADER.ACT_ACT_ID = ACT_TRIP.ACT_ID
+           AND TRIP_HEADER.ACT_ACT_ID = ACT_TRIP.ACT_ID
+           AND SPECIES_VW.SPECIES_CDE (+) = CATCH.SPECIES_SPECIES_CDE
+           AND UTILIZATION.CATCHUTIL_ID (+) = CATCH.CATCHUTIL_ID
+           AND COMP_MTHD.SPECIES_COMP_MTHD_ID (+) = CATCH.SPECIES_COMP_MTHD_ID
+           AND FISHRY_AREA.FA_ID = CATCH.FA_FA_ID
+           AND CRPT_LOG_HEADER.CRPTSTAT_ID = 29 -- committed
+           AND CRPT_LOG_HEADER.CRPT_SOURCE IN ('FLOG','ASOP') -- Fishing Logs, At Sea Observer Logs
+           AND CATCH.SPECIES_SPECIES_CDE = '225' -- Pacific Hake
+           AND CATCH.FA_FA_ID IN (3709,3710,3721,3711,3712,3713,3718,3719,3845,3852,3850,4362,3846,4365,3848,3853,3844,4366,4367,4363,4364,4360,4361,4371,3847,4389,3849) -- Areas
+           AND ACT_TRIP.ACT_ID IN (SELECT ACT_HAILS.ACT_ACT_ID
+                                     FROM FOS_V1_1.ACTIVITY ACT_HAILS,
+                                          FOS_V1_1.CATCH_REPORT CRPT_DMP
+                                    WHERE CRPT_DMP.ACT_ACT_ID = ACT_HAILS.ACT_ID
+                                      AND ACT_HAILS.ACTYP_ACTYP_CDE = 'STOP'
+                                      AND CRPT_DMP.CRPTSTAT_ID = 29 -- committed
+                                  )
+GROUP BY ACT_TRIP.ACT_ID,
+         CRPT_LOG_HEADER.CRPT_SOURCE,
+         CATCH.SPECIES_SPECIES_CDE,
+         SPECIES_VW.SPECIES_COMMON_NME,
+         CATCH.SUBLEGAL_UNMARKETABLE_IND,
+         UTILIZATION.CATCHUTIL_DESC,
+         COMP_MTHD.SPECIES_COMP_MTHD_DESC,
+         FISHRY_AREA.FA_NME,
+         TRIP_HEADER.FSC_COMM_IND
+
+') T
