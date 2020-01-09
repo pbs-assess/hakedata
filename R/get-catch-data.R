@@ -8,8 +8,8 @@
 #'
 #' @importFrom gfdata run_sql
 #' @importFrom here here
-fetch_catch <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
-                        overwrite = FALSE){
+fetch_catch_data <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
+                             overwrite = FALSE){
 
   if(overwrite || !file.exists(here("data", dmp_catch_data_raw_file))){
     dmp <- run_sql("GFBIOSQL", read_sql(dmp_catch_sql_file))
@@ -37,7 +37,7 @@ fetch_catch <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
 #' @importFrom magrittr %>%
 #' @importFrom lubridate as_date
 #' @importFrom dplyr rename
-load_data <- function(min_date = as.Date("2007-04-01")){
+load_catch_data <- function(min_date = as.Date("2007-04-01")){
 
   # DMP LANDINGS
   dmp <- readRDS(here("data", dmp_catch_data_raw_file)) %>%
