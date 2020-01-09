@@ -22,6 +22,7 @@ Imports:
   rnaturalearth,
   purrr,
   readr,
+  reshape2,
   scales,
   sf,
   stats,

@@ -2,15 +2,18 @@
 % Please edit documentation in R/get-data.R
 \name{load_data}
 \alias{load_data}
-\title{Loads data from csv files found in the data directory}
+\title{Loads data from RDS files found in the data directory}
 \usage{
-load_data()
+load_data(min_date = as.Date("2007-04-01"))
+}
+\arguments{
+\item{min_date}{Earliest date to include in the data returned}
 }
 \value{
 A list of three dataframes, \verb{[[1]]} for the DMP data, \verb{[[2]]} for the LOGS data, and \verb{[[3]]} for the area 4B
-data which were not included. \verb{[[3]]} is returned as a convinience for you to see if any other data from area 4B
+data which were not included. \verb{[[3]]} is returned as a convenience for you to see if any other data from area 4B
 should be included
 }
 \description{
-See \link{dmp_file} and \link{logs_pattern} for descriptions of filenames
+The function \code{\link[=fetch_catch]{fetch_catch()}} must be run first to extract the data from the database into RDS files
 }

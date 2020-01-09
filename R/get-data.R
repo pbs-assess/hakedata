@@ -19,59 +19,60 @@ fetch_catch <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
     logs <- run_sql("GFBIOSQL", read_sql(logs_catch_sql_file))
     saveRDS(logs, here("data", logs_catch_data_raw_file))
   }
-
 }
 
-#' Loads data from csv files found in the data directory
+#' Loads data from RDS files found in the data directory
 #'
-#' @description See [dmp_file] and [logs_pattern] for descriptions of filenames
+#' @param min_date Earliest date to include in the data returned
+#'
+#' @description The function [fetch_catch()] must be run first to extract the data from the database into RDS files
 #' @return A list of three dataframes, `[[1]]` for the DMP data, `[[2]]` for the LOGS data, and `[[3]]` for the area 4B
-#'   data which were not included. `[[3]]` is returned as a convinience for you to see if any other data from area 4B
+#'   data which were not included. `[[3]]` is returned as a convenience for you to see if any other data from area 4B
 #'   should be included
 #' @export
 #' @importFrom readr read_csv
 #' @importFrom purrr map reduce
 #' @importFrom here here
-load_data <- function(){
-  data_path <- here("data")
+#' @immportFrom tibble as_tibble
+#' @importFrom magrittr %>%
+#' @importFrom lubridate as_date
+#' @importFrom dplyr rename
+load_data <- function(min_date = as.Date("2007-04-01")){
 
   # DMP LANDINGS
-  dmp <- readLines(file.path(data_path, dmp_file))
-  if(length(grep("^PACIFIC HAKE", dmp[1]))){
-    dmp <- dmp[-1]
-    writeLines(dmp, file.path(data_path, dmp_file))
-  }
-  dmp <- read_csv(file.path(data_path, dmp_file))
-  # Replace all spaces in column names with periods
-  names(dmp) <- gsub(" +", ".", names(dmp))
-  names(dmp) <- gsub("\\(", ".", names(dmp))
-  names(dmp) <- gsub("\\)", "", names(dmp))
-  dmp$LANDING.DATE <- gsub(" 00:00", "", dmp$LANDING.DATE)
-  dmp$LANDING.DATE <- as.Date(dmp$LANDING.DATE, "%B %d %Y")
+  dmp <- readRDS(here("data", dmp_catch_data_raw_file)) %>%
+    as_tibble() %>%
+    rename(LANDING_DATE = LANDING_DTT) %>%
+    filter(!is.na(LANDING_DATE))
+
+  dmp$LANDING_DATE <- as.Date(dmp$LANDING_DATE, "%B %d %Y")
+  dmp <- dmp %>%
+    filter(LANDING_DATE >= min_date)
   dmp <- remove_trip_data(dmp,
                           types = c("GULF", "OPT B"),
-                          trip_type_colname = "LICENCE.TRIP.TYPE")
+                          trip_type_colname = "LICENCE_TRIP_TYPE")
 
   # LOGS LANDINGS
+  data_path <- here("data")
   logs_files <- dir(data_path, pattern = logs_pattern)
   map(logs_files, ~strip_lines(file.path(data_path, .)))
   logs <- map(logs_files, ~read_csv(file.path(data_path, .)))
   logs <- reduce(logs, rbind)
-  # Replace all spaces in column names with periods
-  names(logs) <- gsub(" +", ".", names(logs))
-  names(logs) <- gsub("/", ".", names(logs))
-  logs$LANDING.DATE <- as.Date(logs$LANDING.DATE, "%B %d %Y")
+  # Replace all spaces in column names with underscores
+  names(logs) <- gsub(" +", "_", names(logs))
+  names(logs) <- gsub("/", "_", names(logs))
+  logs$LANDING_DATE <- as.Date(logs$LANDING_DATE, "%B %d %Y")
   logs <- remove_trip_data(logs,
                            types = c("GULF", "OPT B"),
-                           trip_type_colname = "TRIP.TYPE")
+                           trip_type_colname = "TRIP_TYPE")
   area4b <- NULL
   if(any(logs$AREA == "4B")){
     area4b <- filter(logs, AREA == "4B")
     logs <- filter(logs,
-                   LANDING.PORT != "FRENCH CREEK",
+                   LANDING_PORT != "FRENCH CREEK",
                   !(AREA == "4B" && month < 6))
     message("Some of the LOGS landings are in the 4B area. They ",
-            "are stored in the global variable `area4b` for manual checking. ",
+            "are stored in the third list element returned from this function for manual checking. ",
             "All landings from French Creek were removed, and those landed ",
             "before June in 4B, but you may want to remove some other records.")
   }
@@ -97,14 +98,14 @@ get_catch <- function(d, type){
   if(type == "ft" || type == "ss"){
     # If the non-JV vessel was fishing in JV, remove those catches
     dmp <- dmp %>%
-      filter(!grepl("JV", LICENCE.TRIP.TYPE))
+      filter(!grepl("JV", LICENCE_TRIP_TYPE))
     logs <- logs %>%
-      filter(!grepl("JV", TRIP.TYPE))
+      filter(!grepl("JV", TRIP_TYPE))
   }
   # At Sea Observer Program records only (all of those are discards in the LOGS data), for all fleet types
   discards <- logs %>%
     filter(SOURCE == "ASOP",
-           !is.na(RELEASED.WT))
+           !is.na(RELEASED_WT))
   if(type == "ft"){
     dmp <- dmp %>%
       filter(VRN %in% freezer_trawlers$FOS.ID)
@@ -117,28 +118,32 @@ get_catch <- function(d, type){
       filter(!VRN %in% freezer_trawlers$FOS.ID)
   }else if(type == "jv"){
     dmp <- dmp %>%
-      filter(grepl("JV", LICENCE.TRIP.TYPE))
+      filter(grepl("JV", LICENCE_TRIP_TYPE))
     discards <- discards %>%
-      filter(grepl("JV", TRIP.TYPE))
+      filter(grepl("JV", TRIP_TYPE))
   }
+
   dmp <- dmp %>%
-    complete(LANDING.DATE = seq.Date(min(LANDING.DATE), max(LANDING.DATE), by = "day")) %>%
-    mutate(year = year(LANDING.DATE),
-           month = month(LANDING.DATE),
-           day = day(LANDING.DATE)) %>%
-    select(year, month, day, CONVERTED.WGHT.LBS) %>%
+    complete(LANDING_DATE = seq.Date(min(LANDING_DATE), max(LANDING_DATE), by = "day")) %>%
+    mutate(year = year(LANDING_DATE),
+           month = month(LANDING_DATE),
+           day = day(LANDING_DATE),
+           CONVWT = as.numeric(CONVWT)) %>%
+    select(year, month, day, CONVWT) %>%
     group_by(year, month, day) %>%
-    summarize(landings = sum(CONVERTED.WGHT.LBS) * lbs_to_kilos,
+    summarize(landings = sum(CONVWT) * lbs_to_kilos,
               count =  n()) %>%
-    ungroup()
+    ungroup() %>%
+    mutate(landings = ifelse(is.na(landings), 0, landings))
+
   discards <- discards %>%
-    complete(LANDING.DATE = seq.Date(min(LANDING.DATE), max(LANDING.DATE), by = "day")) %>%
-    mutate(year = year(LANDING.DATE),
-           month = month(LANDING.DATE),
-           day = day(LANDING.DATE)) %>%
-    select(year, month, day, RELEASED.WT) %>%
+    complete(LANDING_DATE = seq.Date(min(LANDING_DATE), max(LANDING_DATE), by = "day")) %>%
+    mutate(year = year(LANDING_DATE),
+           month = month(LANDING_DATE),
+           day = day(LANDING_DATE)) %>%
+    select(year, month, day, RELEASED_WT) %>%
     group_by(year, month, day) %>%
-    summarize(landings = sum(RELEASED.WT) * lbs_to_kilos,
+    summarize(landings = sum(RELEASED_WT) * lbs_to_kilos,
               count =  n()) %>%
     ungroup()
 
@@ -168,6 +173,26 @@ remove_trip_data <- function(d, types, trip_type_colname){
     }
   }
   d
+}
+
+#' Create a CSV file with catch by year and month for a particular fishery
+#'
+#' @param df The data frame to reduce into a CSV. This will be output from the [get_catch()] function
+#' @param fn Filename for the CSV
+#'
+#' @export
+#' @importFrom reshape2 dcast
+#' @importFrom dplyr group_by summarize
+#' @importFrom readr write_csv
+create_catch_csv_file <- function(df,
+                                  fn = NA){
+  stopifnot(!is.na(fn))
+  d <- df %>%
+    group_by(year, month) %>%
+    summarize(catch = sum(landings) / 1000)
+  d <- dcast(d, year ~ month )
+  d[is.na(d)] <- 0
+  write_csv(d, fn)
 }
 
 #' Strip header lines of LOGBOOK file
