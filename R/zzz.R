@@ -57,6 +57,7 @@ globalVariables(c(
   "month",
   "num_fids",
   "num_landings",
+  "sample_data_raw_file",
   "scale_colour_manual",
   "scale_fill_manual",
   "spatial_catch_sql_file",

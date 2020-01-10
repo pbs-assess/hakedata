@@ -16,6 +16,10 @@
 #'
 #' @format A character string
 "logs_catch_sql_file"
+#' Name of the commerical samples rds file
+#'
+#' @format A character string
+"sample_data_raw_file"
 #' Name of the DMP catch rds file
 #'
 #' @format A character string

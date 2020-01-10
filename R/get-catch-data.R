@@ -25,7 +25,7 @@ fetch_catch_data <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
 #'
 #' @param min_date Earliest date to include in the data returned
 #'
-#' @description The function [fetch_catch()] must be run first to extract the data from the database into RDS files
+#' @description The function [fetch_catch_data()] must be run first to extract the data from the database into RDS files
 #' @return A list of three dataframes, `[[1]]` for the DMP data, `[[2]]` for the LOGS data, and `[[3]]` for the area 4B
 #'   data which were not included. `[[3]]` is returned as a convenience for you to see if any other data from area 4B
 #'   should be included
@@ -82,8 +82,8 @@ load_catch_data <- function(min_date = as.Date("2007-04-01")){
 #' Get the catch data from the DMP and LOGS data frames
 #'
 #' @param d a list of length 2 with elements being (1) The Dockside Monitoring Program
-#'  data frame as extracted by [load_data()] and (2) the Logbook data frame
-#'  as extracted by [load_data()]
+#'  data frame as extracted by [load_catch_data()] and (2) the Logbook data frame
+#'  as extracted by [load_catch_data()]
 #' @param type one of "ft", "ss", or "jv" for Freezer Trawler, Shoreside, or Joint Venture respectively
 #' @return A data frame containing only data for the type given by `type`
 #' @export

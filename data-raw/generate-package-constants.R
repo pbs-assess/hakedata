@@ -8,6 +8,7 @@ dmp_catch_sql_file <- "dmp-catch-stored-proc.sql"
 dmp_catch_data_raw_file <- "dmp-catch-data.rds"
 logs_catch_sql_file <- "logs-catch-stored-proc.sql"
 logs_catch_data_raw_file <- "logs-catch-data.rds"
+sample_data_raw_file <- "sample-data.rds"
 hake_catch_ft_file <- "pacific-hake-catch-ft.rds"
 hake_catch_ss_file <- "pacific-hake-catch-ss.rds"
 hake_catch_jv_file <- "pacific-hake-catch-jv.rds"
@@ -42,6 +43,7 @@ usethis::use_data(dmp_file, overwrite = TRUE)
 usethis::use_data(spatial_catch_sql_file, overwrite = TRUE)
 usethis::use_data(dmp_catch_sql_file, overwrite = TRUE)
 usethis::use_data(dmp_catch_data_raw_file, overwrite = TRUE)
+usethis::use_data(sample_data_raw_file, overwrite = TRUE)
 usethis::use_data(logs_catch_sql_file, overwrite = TRUE)
 usethis::use_data(logs_catch_data_raw_file, overwrite = TRUE)
 usethis::use_data(hake_catch_ft_file, overwrite = TRUE)
