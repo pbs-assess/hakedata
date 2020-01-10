@@ -2,7 +2,8 @@
 % Please edit documentation in R/get-age-data.R
 \name{fetch_sample_data}
 \alias{fetch_sample_data}
-\title{Fetch the sample data from the GFBIOSQL database}
+\title{Fetch the sample data from the GFBIOSQL database
+The data will be filtered to only include hake major and minor areas}
 \usage{
 fetch_sample_data(overwrite = FALSE)
 }
@@ -11,4 +12,5 @@ fetch_sample_data(overwrite = FALSE)
 }
 \description{
 Fetch the sample data from the GFBIOSQL database
+The data will be filtered to only include hake major and minor areas
 }

@@ -4,7 +4,11 @@
 \alias{get_age_props}
 \title{Calculate the age proportions}
 \usage{
-get_age_props(min_date = as.Date("1985-01-01"), plus_grp = 15)
+get_age_props(
+  min_date = as.Date("1985-01-01"),
+  plus_grp = 15,
+  lw_model_by_year = FALSE
+)
 }
 \arguments{
 \item{min_date}{Earliest date to include}

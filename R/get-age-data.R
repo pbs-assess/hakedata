@@ -20,6 +20,28 @@ fetch_sample_data <- function(overwrite = FALSE){
   }
 }
 
+#' Fit a length-weight model
+#'
+#' @param d Dataframe containing the columns `length` and `weight`
+#' @param tol See [stats::nls()]
+#' @param maxiter See [stats::nls()]
+#'
+#' @return The [stats::coefficients()] of the model fit
+#' @importFrom stats nls coefficients
+fit_lw <- function(d,
+                   tol = 0.1,
+                   maxiter = 500){
+  d <- d %>%
+    filter(!is.na(length),
+           !is.na(weight))
+  w <- d$weight
+  l <- d$length
+  fit <- nls(w ~ a * l ^ b,
+             start = c(a = 0.5, b = 2.0),
+             control = list(tol = tol, maxiter = maxiter))
+  coefficients(fit)
+}
+
 #' Calculate the age proportions
 #'
 #' @param min_date Earliest date to include
@@ -28,9 +50,22 @@ fetch_sample_data <- function(overwrite = FALSE){
 #' @return
 #' @export
 get_age_props <- function(min_date = as.Date("1985-01-01"),
-                          plus_grp = 15){
+                          plus_grp = 15,
+                          lw_model_by_year = FALSE){
   d <- readRDS(here("data", sample_data_raw_file)) %>%
-    as_tibble() #%>%
+    filter(!is.na(age)) %>%
+    mutate(age = ifelse(age > plus_grp, plus_grp, age)) %>%
+    mutate(trip_start_date = as.Date(trip_start_date)) %>%
+    filter(trip_start_date >= min_date)
 
+  all_lw <- fit_lw(d)
+
+  j <- d %>%
+    group_by(year) %>%
+    summarize(catch_weight = sum(catch_weight))
+
+
+
+  browser()
 }
 
