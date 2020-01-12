@@ -5,18 +5,27 @@
 \title{Calculate the age proportions}
 \usage{
 get_age_props(
-  min_date = as.Date("1985-01-01"),
+  min_date = as.Date("1972-01-01"),
   plus_grp = 15,
-  lw_model_by_year = FALSE
+  lw_cutoff = 10,
+  lw_tol = 0.1,
+  lw_maxiter = 1000
 )
 }
 \arguments{
 \item{min_date}{Earliest date to include}
 
 \item{plus_grp}{Age plus group for maximum grouping}
+
+\item{lw_cutoff}{How many length-weight records are required per sample to use the
+length-weight model for that sample. If less than this, the overall yearly values will be used}
+
+\item{lw_tol}{See \code{\link[=fit_lw]{fit_lw()}}}
+
+\item{lw_maxiter}{See \code{\link[=fit_lw]{fit_lw()}}}
 }
 \value{
-
+Age proportion dataframe
 }
 \description{
 Calculate the age proportions

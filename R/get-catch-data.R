@@ -33,7 +33,7 @@ fetch_catch_data <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
 #' @importFrom readr read_csv
 #' @importFrom purrr map reduce
 #' @importFrom here here
-#' @immportFrom tibble as_tibble
+#' @importFrom tibble as_tibble
 #' @importFrom magrittr %>%
 #' @importFrom lubridate as_date
 #' @importFrom dplyr rename

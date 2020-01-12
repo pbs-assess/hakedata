@@ -30,42 +30,171 @@ fetch_sample_data <- function(overwrite = FALSE){
 #' @importFrom stats nls coefficients
 fit_lw <- function(d,
                    tol = 0.1,
-                   maxiter = 500){
+                   maxiter = 1000){
   d <- d %>%
     filter(!is.na(length),
            !is.na(weight))
+  if(!nrow(d)){
+    return(c(NA, NA))
+  }
   w <- d$weight
   l <- d$length
-  fit <- nls(w ~ a * l ^ b,
-             start = c(a = 0.5, b = 2.0),
+  fit <- nls(w ~ lw_alpha * l ^ lw_beta,
+             start = c(lw_alpha = 0.5, lw_beta = 2.0),
              control = list(tol = tol, maxiter = maxiter))
   coefficients(fit)
+}
+
+#' Calculate the length-weight relationship parameters for the data with both length and weight, on a
+#' specimen-by-specime basis
+#'
+#' @param d The data frame as extracted using [fetch_sample_data()]
+#' @param grouping_col A character string matching the name of the column you want to group for
+#' @param lw_cutoff How many length-weight records are required per sample to use the
+#' length-weight model for that sample. If less than this, the overall yearly values will be used
+#' @param lw_tol See [fit_lw()]
+#' @param lw_maxiter See [fit_lw()]
+#'
+#' @return The original data frame with the columns `lw_alpha` and `lw_beta` added (if necessary). If those columns
+#' exist, they will be overwritten with NAs and values calculated where data exist
+#' @export
+#' @importFrom dplyr group_map left_join sym coalesce
+calc_lw_params <- function(d,
+                           grouping_col = "year",
+                           lw_cutoff = 10,
+                           lw_tol = 0.1,
+                           lw_maxiter = 1000){
+  coalesce_after <- ifelse("lw_alpha" %in% names(d), TRUE, FALSE)
+  x <- d %>%
+    group_by(!! sym(grouping_col)) %>%
+    group_map(~ fit_lw(.x, lw_tol, lw_maxiter)) %>%
+    set_names(1:length(.))
+
+  y <- do.call(rbind, x)
+  y <- cbind(unique(d[[grouping_col]]), y) %>%
+    as_tibble()
+  names(y)[1] <- grouping_col
+  out <- left_join(d, y, by = grouping_col)
+  if(coalesce_after){
+    out <- out %>% mutate(lw_alpha = coalesce(lw_alpha.x, lw_alpha.y),
+                          lw_beta = coalesce(lw_beta.x, lw_beta.y)) %>%
+      select(-c(lw_alpha.x, lw_alpha.y, lw_beta.x, lw_beta.y))
+  }
+  out
 }
 
 #' Calculate the age proportions
 #'
 #' @param min_date Earliest date to include
 #' @param plus_grp Age plus group for maximum grouping
+#' @param lw_cutoff How many length-weight records are required per sample to use the
+#' length-weight model for that sample. If less than this, the overall yearly values will be used
+#' @param lw_tol See [fit_lw()]
+#' @param lw_maxiter See [fit_lw()]
 #'
-#' @return
+#' @return Age proportion dataframe
 #' @export
-get_age_props <- function(min_date = as.Date("1985-01-01"),
+#' @importFrom dplyr tally pull group_map bind_cols left_join
+#' @importFrom purrr set_names map_dfr map
+get_age_props <- function(min_date = as.Date("1972-01-01"),
                           plus_grp = 15,
-                          lw_model_by_year = FALSE){
+                          lw_cutoff = 10,
+                          lw_tol = 0.1,
+                          lw_maxiter = 1000){
+
   d <- readRDS(here("data", sample_data_raw_file)) %>%
     filter(!is.na(age)) %>%
     mutate(age = ifelse(age > plus_grp, plus_grp, age)) %>%
     mutate(trip_start_date = as.Date(trip_start_date)) %>%
     filter(trip_start_date >= min_date)
 
-  all_lw <- fit_lw(d)
+  #all_yrs_lw <- fit_lw(d, lw_tol, lw_maxiter)
 
-  j <- d %>%
-    group_by(year) %>%
-    summarize(catch_weight = sum(catch_weight))
+  # The total catch by year
+  # ct_yr <- d %>%
+  #   group_by(year) %>%
+  #   summarize(catch_weight = sum(catch_weight))
+
+  ds <- calc_lw_params(d, "sample_id", lw_cutoff, lw_tol, lw_maxiter)
+  dy <- calc_lw_params(ds, "year", lw_cutoff, lw_tol, lw_maxiter)
+browser()
+  d_nonna_lw <- d %>%
+    filter(!(is.na(length) | is.na(weight)))
 
 
+  samp_based_lw_df <- d_nonna_lw %>%
+    group_by(year, sample_id) %>%
+    tally(name = "num_lw") %>%
+    filter(num_lw >= lw_cutoff) %>%
+    ungroup()
 
+  # Make a vector of sample IDs that can have their own LW relationship estimated based on the `lw_cutoff`
+  samp_based_lw_vec <- samp_based_lw_df %>%
+    pull(sample_id)
+
+  # Do the LW model fit for the above sample_ids and add those as columns
+  samp_lw_coefs <- d_nonna_lw %>%
+    filter(sample_id %in% samp_based_lw_vec) %>%
+    group_by(year, sample_id) %>%
+    group_map(~ fit_lw(.x, lw_tol, lw_maxiter)) %>%
+    set_names(1:length(.)) %>%
+    map_dfr(~ as.data.frame(as.list(.x))) %>%
+    cbind(sample_id = samp_based_lw_vec)
+
+  xx <- d %>%
+    filter(sample_id %in% samp_based_lw_vec)
   browser()
+  samp <- calc_lw(xx)
+
+
+  samp_based_lw_df <- samp_based_lw_df %>%
+    bind_cols(samp_lw_coefs) %>%
+    select(-c(year, num_lw))
+
+  d_all <- d %>%
+    left_join(samp_based_lw_df, by = "sample_id")
+
+  # For all records with a length and weight but no a and b for LW relationship, use entire time series estimates
+  # d_all <- d_all %>%
+  #   mutate(a = ifelse(!(is.na(length) | is.na(weight)) & is.na(a) & is.na(b), all_yrs_lw[1], a),
+  #          b = ifelse(!(is.na(length) | is.na(weight)) & is.na(a) & is.na(b), all_yrs_lw[1], b))
+browser()
+  d_all <- d_all %>% filter(sample_id  %in% c(66357, 67173))
 }
 
+#' Summarize the numbers of lengths, weights, ages, sample_weights, and catch_weights in the sample data
+#'
+#' @param d A dataframe as extracted using [fetch_sample_data()]
+#'
+#' @return A list of two dataframes, the first summarized by year and the second sampled by sample_id and year
+#' @export
+sample_summary <- function(d = readRDS(here("data", sample_data_raw_file))){
+  d_by_sample_id <- d %>%
+    group_by(year, sample_id) %>%
+    summarize(ages = sum(!is.na(age)),
+              na_ages = sum(is.na(age)),
+              lengths = sum(!is.na(length)),
+              na_lengths = sum(is.na(length)),
+              weights = sum(!is.na(weight)),
+              na_weights = sum(is.na(weight)),
+              sample_weights = sum(!is.na(sample_weight)),
+              na_sample_weights = sum(is.na(sample_weight)),
+              catch_weights = sum(!is.na(catch_weight)),
+              na_catch_weights = sum(is.na(catch_weight))) %>%
+    ungroup()
+
+  d_by_yr <- d_by_sample_id %>%
+    group_by(year) %>%
+    summarize(ages = sum(ages),
+              na_ages = sum(na_ages),
+              lengths = sum(lengths),
+              na_lengths = sum(na_lengths),
+              weights = sum(weights),
+              na_weights = sum(na_weights),
+              sample_weights = sum(sample_weights),
+              na_sample_weights = sum(na_sample_weights),
+              catch_weights = sum(catch_weights),
+              na_catch_weights = sum(na_catch_weights)) %>%
+    ungroup()
+  list(d_by_yr, d)
+}

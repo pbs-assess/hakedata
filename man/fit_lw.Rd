@@ -4,7 +4,7 @@
 \alias{fit_lw}
 \title{Fit a length-weight model}
 \usage{
-fit_lw(d, tol = 0.1, maxiter = 500)
+fit_lw(d, tol = 0.1, maxiter = 1000)
 }
 \arguments{
 \item{d}{Dataframe containing the columns \code{length} and \code{weight}}
