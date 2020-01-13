@@ -5,6 +5,7 @@
 \title{Calculate the weighted age proportions for the input data}
 \usage{
 get_age_props(
+  d = readRDS(here("data", sample_data_raw_file)),
   min_date = as.Date("1972-01-01"),
   plus_grp = 15,
   lw_cutoff = 10,
@@ -13,6 +14,8 @@ get_age_props(
 )
 }
 \arguments{
+\item{d}{Dataframe as extracted by \code{\link[=fetch_sample_data]{fetch_sample_data()}}}
+
 \item{min_date}{Earliest date to include}
 
 \item{plus_grp}{Age plus group for maximum grouping}

@@ -109,6 +109,7 @@ calc_lw_params <- function(d,
 #' Numbers for each `year` and `age` are summed.
 #' Weighted proportions by `year` and `age` are produced.
 #'
+#' @param d Dataframe as extracted by [fetch_sample_data()]
 #' @param min_date Earliest date to include
 #' @param plus_grp Age plus group for maximum grouping
 #' @param lw_cutoff How many length-weight records are required to estimate a length/weight model
@@ -119,13 +120,14 @@ calc_lw_params <- function(d,
 #' @export
 #' @importFrom dplyr first
 #' @importFrom reshape2 dcast
-get_age_props <- function(min_date = as.Date("1972-01-01"),
+get_age_props <- function(d = readRDS(here("data", sample_data_raw_file)),
+                          min_date = as.Date("1972-01-01"),
                           plus_grp = 15,
                           lw_cutoff = 10,
                           lw_tol = 0.1,
                           lw_maxiter = 1000){
 
-  d <- readRDS(here("data", sample_data_raw_file)) %>%
+  d <- d %>%
     filter(!is.na(age)) %>%
     mutate(age = ifelse(age > plus_grp, plus_grp, age)) %>%
     mutate(trip_start_date = as.Date(trip_start_date)) %>%
