@@ -35,6 +35,8 @@ globalVariables(c(
   "na_lengths",
   "na_weights",
   "na_sample_weights",
+  "num_ages",
+  "num_ages_weighted",
   "num_lw",
   "RELEASED_WT",
   "sample_id",

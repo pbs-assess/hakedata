@@ -94,7 +94,7 @@ calc_lw_params <- function(d,
 #'
 #' @return Age proportion dataframe
 #' @export
-#' @importFrom dplyr tally pull group_map bind_cols left_join
+#' @importFrom dplyr tally left_join count first
 #' @importFrom purrr set_names map_dfr map
 get_age_props <- function(min_date = as.Date("1972-01-01"),
                           plus_grp = 15,
@@ -106,12 +106,8 @@ get_age_props <- function(min_date = as.Date("1972-01-01"),
     filter(!is.na(age)) %>%
     mutate(age = ifelse(age > plus_grp, plus_grp, age)) %>%
     mutate(trip_start_date = as.Date(trip_start_date)) %>%
-    filter(trip_start_date >= min_date)
-
-  # The total catch by year
-  # ct_yr <- d %>%
-  #   group_by(year) %>%
-  #   summarize(catch_weight = sum(catch_weight))
+    filter(trip_start_date >= min_date) %>%
+    select(year, sample_id, length, weight, age, sample_weight, catch_weight)
 
   # The following estimates the LW params for sample IDs with enough (lw_cutoff) lengths,
   # followed by year if not enough, followwd by whole time series for the remainder. Once this
@@ -130,21 +126,48 @@ get_age_props <- function(min_date = as.Date("1972-01-01"),
 
   # Calculate the weights from length for all missing weights, using specimen-specific LW params
   ds <- ds %>%
+    filter(!is.na(length)) %>%
     mutate(weight = ifelse(is.na(weight),
                            lw_alpha * length ^ lw_beta,
-                           weight)) %>%
-    filter(!is.na(weight))
+                           weight))
 
   # Calculate missing sample weights, by summing individual specimen weights in each sample
-  # They are divided by 1000 because the specimen samples are in grams and sample weights in kilograms
-  ds <- ds %>%
+  # They are divided by 1000 because the specimen samples are in grams and sample weights in kilograms.
+  # Make counts of ages by `sample_id`, and fill in missing ages ([tidyr::complete()]).
+  # Fill in missing `year`, `sample_weight`, and `catch_weight` for cases added with [tidyr::complete()].
+  # Weight the numbers-at-age by `catch_weight` / `sample_weight`
+  # Add up the numbers for each year and age, and
+  # Make the proportions by year and age
+  ap <- ds %>%
     group_by(sample_id) %>%
     mutate(sample_weight = ifelse(is.na(sample_weight),
                                   sum(weight) / 1000.0,
-                                  sample_weight))
-  browser()
+                                  sample_weight)) %>%
+    ungroup() %>%
+    group_by(sample_id, age) %>%
+    summarize(year = first(year),
+              num_ages = n(),
+              sample_weight = first(sample_weight),
+              catch_weight = first(catch_weight)) %>%
+    ungroup() %>%
+    complete(sample_id, age) %>%
+    filter(age > 0) %>%
+    group_by(sample_id) %>%
+    mutate(num_ages = ifelse(is.na(num_ages),
+                             0,
+                             num_ages),
+           year = max(year, na.rm = TRUE),
+           sample_weight = max(sample_weight, na.rm = TRUE),
+           catch_weight = max(catch_weight, na.rm = TRUE)) %>%
+    mutate(num_ages_weighted = num_ages * catch_weight / sample_weight) %>%
+    ungroup() %>%
+    group_by(year, age) %>%
+    summarize(num_ages_weighted = sum(num_ages_weighted)) %>%
+    mutate(age_prop = num_ages_weighted / sum(num_ages_weighted)) %>%
+    ungroup() %>%
+    select(-num_ages_weighted)
 
-  d_all <- d_all %>% filter(sample_id  %in% c(66357, 67173))
+  ap
 }
 
 #' Summarize the numbers of lengths, weights, ages, sample_weights, and catch_weights in the sample data
