@@ -128,12 +128,20 @@ get_age_props <- function(min_date = as.Date("1972-01-01"),
            lw_beta = coalesce(lw_beta.x, lw_beta.y)) %>%
     select(-c(lw_alpha.x, lw_alpha.y, lw_beta.x, lw_beta.y))
 
-  # Now, calculate the weights from length for all missing weights, using speimen-specific LW params
+  # Calculate the weights from length for all missing weights, using specimen-specific LW params
   ds <- ds %>%
     mutate(weight = ifelse(is.na(weight),
                            lw_alpha * length ^ lw_beta,
                            weight)) %>%
     filter(!is.na(weight))
+
+  # Calculate missing sample weights, by summing individual specimen weights in each sample
+  # They are divided by 1000 because the specimen samples are in grams and sample weights in kilograms
+  ds <- ds %>%
+    group_by(sample_id) %>%
+    mutate(sample_weight = ifelse(is.na(sample_weight),
+                                  sum(weight) / 1000.0,
+                                  sample_weight))
   browser()
 
   d_all <- d_all %>% filter(sample_id  %in% c(66357, 67173))
