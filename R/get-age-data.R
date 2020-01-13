@@ -59,6 +59,7 @@ fit_lw <- function(d,
 #' exist, they will be overwritten with NAs and values calculated where data exist
 #' @export
 #' @importFrom dplyr group_map left_join sym coalesce
+#' @importFrom purrr set_names
 calc_lw_params <- function(d,
                            grouping_col = "year",
                            lw_cutoff = 10,
@@ -116,8 +117,8 @@ calc_lw_params <- function(d,
 #'
 #' @return Age proportion dataframe
 #' @export
-#' @importFrom dplyr tally left_join count first
-#' @importFrom purrr set_names map_dfr map
+#' @importFrom dplyr first
+#' @importFrom reshape2 dcast
 get_age_props <- function(min_date = as.Date("1972-01-01"),
                           plus_grp = 15,
                           lw_cutoff = 10,
@@ -187,7 +188,7 @@ get_age_props <- function(min_date = as.Date("1972-01-01"),
     ungroup() %>%
     select(-num_ages_weighted)
 
-  ap
+  dcast(ap, year ~ age, value.var = "age_prop")
 }
 
 #' Summarize the numbers of lengths, weights, ages, sample_weights, and catch_weights in the sample data
