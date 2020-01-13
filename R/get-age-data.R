@@ -83,12 +83,34 @@ calc_lw_params <- function(d,
   out
 }
 
-#' Calculate the age proportions
+#' Calculate the weighted age proportions for the input data
+#'
+#' @details
+#' Each record will have an `lw_alpha` and `lw_beta` assigned to it. To get these:
+#' Estimate them for `sample_id`s with enough (`lw_cutoff`) length samples in them.
+#' Next, group the data by `year` and coalesce those into the same columns.
+#' To fill in the remaining ones, use an overall (all years) estimate (local variable
+#' `all_yrs_lw`). At this point, the `lw_alpha` and `lw_beta` columns will be fully
+#' populated for every specimen (no NAs).
+#' Hake sampling for length has been very good, so specimen weights are calculated using the
+#' length/weight parameters estimated for each specimen (for records in which weights
+#' haven't been recorded as data).
+#'
+#' Calculate missing sample weights, by summing individual specimen weights in each sample
+#' They are divided by 1,000 because the specimen samples are in grams and sample weights in kilograms.
+#' If there is no catch weight for a sample, both `catch_weight` and `sample_weight` are
+#' set to 1 so that the ratio multiplied later for weighting is 1 and raw proportions are used
+#' instead for these samples.
+#'
+#' Counts of ages by `sample_id` are made, and missing ages are filled in using [tidyr::complete()].
+#' Missing `year`, `sample_weight`, and `catch_weight` for cases added with [tidyr::complete()] are added.
+#' Numbers-at-age are weighted by `catch_weight` / `sample_weight`.
+#' Numbers for each `year` and `age` are summed.
+#' Weighted proportions by `year` and `age` are produced.
 #'
 #' @param min_date Earliest date to include
 #' @param plus_grp Age plus group for maximum grouping
-#' @param lw_cutoff How many length-weight records are required per sample to use the
-#' length-weight model for that sample. If less than this, the overall yearly values will be used
+#' @param lw_cutoff How many length-weight records are required to estimate a length/weight model
 #' @param lw_tol See [fit_lw()]
 #' @param lw_maxiter See [fit_lw()]
 #'
@@ -109,9 +131,7 @@ get_age_props <- function(min_date = as.Date("1972-01-01"),
     filter(trip_start_date >= min_date) %>%
     select(year, sample_id, length, weight, age, sample_weight, catch_weight)
 
-  # The following estimates the LW params for sample IDs with enough (lw_cutoff) lengths,
-  # followed by year if not enough, followwd by whole time series for the remainder. Once this
-  # call is done, the lw_alpha and lw_beta columns will be fully populated for every specimen (no NAs)
+  # LW paramater estimation
   all_yrs_lw <- fit_lw(d, lw_tol, lw_maxiter)
   ds <- d %>%
     calc_lw_params("sample_id", lw_cutoff, lw_tol, lw_maxiter) %>%
@@ -124,25 +144,25 @@ get_age_props <- function(min_date = as.Date("1972-01-01"),
            lw_beta = coalesce(lw_beta.x, lw_beta.y)) %>%
     select(-c(lw_alpha.x, lw_alpha.y, lw_beta.x, lw_beta.y))
 
-  # Calculate the weights from length for all missing weights, using specimen-specific LW params
+  # Calculate the weights from length for all missing weights,
+  # using specimen-specific LW params
   ds <- ds %>%
     filter(!is.na(length)) %>%
     mutate(weight = ifelse(is.na(weight),
                            lw_alpha * length ^ lw_beta,
                            weight))
 
-  # Calculate missing sample weights, by summing individual specimen weights in each sample
-  # They are divided by 1000 because the specimen samples are in grams and sample weights in kilograms.
-  # Make counts of ages by `sample_id`, and fill in missing ages ([tidyr::complete()]).
-  # Fill in missing `year`, `sample_weight`, and `catch_weight` for cases added with [tidyr::complete()].
-  # Weight the numbers-at-age by `catch_weight` / `sample_weight`
-  # Add up the numbers for each year and age, and
-  # Make the proportions by year and age
   ap <- ds %>%
     group_by(sample_id) %>%
     mutate(sample_weight = ifelse(is.na(sample_weight),
                                   sum(weight) / 1000.0,
                                   sample_weight)) %>%
+    mutate(sample_weight = ifelse(all(is.na(catch_weight)),
+                                  1,
+                                  sample_weight),
+           catch_weight = ifelse(all(is.na(catch_weight)),
+                                 1,
+                                 catch_weight)) %>%
     ungroup() %>%
     group_by(sample_id, age) %>%
     summarize(year = first(year),

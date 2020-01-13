@@ -2,7 +2,7 @@
 % Please edit documentation in R/get-age-data.R
 \name{get_age_props}
 \alias{get_age_props}
-\title{Calculate the age proportions}
+\title{Calculate the weighted age proportions for the input data}
 \usage{
 get_age_props(
   min_date = as.Date("1972-01-01"),
@@ -17,8 +17,7 @@ get_age_props(
 
 \item{plus_grp}{Age plus group for maximum grouping}
 
-\item{lw_cutoff}{How many length-weight records are required per sample to use the
-length-weight model for that sample. If less than this, the overall yearly values will be used}
+\item{lw_cutoff}{How many length-weight records are required to estimate a length/weight model}
 
 \item{lw_tol}{See \code{\link[=fit_lw]{fit_lw()}}}
 
@@ -28,5 +27,28 @@ length-weight model for that sample. If less than this, the overall yearly value
 Age proportion dataframe
 }
 \description{
-Calculate the age proportions
+Calculate the weighted age proportions for the input data
+}
+\details{
+Each record will have an \code{lw_alpha} and \code{lw_beta} assigned to it. To get these:
+Estimate them for \code{sample_id}s with enough (\code{lw_cutoff}) length samples in them.
+Next, group the data by \code{year} and coalesce those into the same columns.
+To fill in the remaining ones, use an overall (all years) estimate (local variable
+\code{all_yrs_lw}). At this point, the \code{lw_alpha} and \code{lw_beta} columns will be fully
+populated for every specimen (no NAs).
+Hake sampling for length has been very good, so specimen weights are calculated using the
+length/weight parameters estimated for each specimen (for records in which weights
+haven't been recorded as data).
+
+Calculate missing sample weights, by summing individual specimen weights in each sample
+They are divided by 1,000 because the specimen samples are in grams and sample weights in kilograms.
+If there is no catch weight for a sample, both \code{catch_weight} and \code{sample_weight} are
+set to 1 so that the ratio multiplied later for weighting is 1 and raw proportions are used
+instead for these samples.
+
+Counts of ages by \code{sample_id} are made, and missing ages are filled in using \code{\link[tidyr:complete]{tidyr::complete()}}.
+Missing \code{year}, \code{sample_weight}, and \code{catch_weight} for cases added with \code{\link[tidyr:complete]{tidyr::complete()}} are added.
+Numbers-at-age are weighted by \code{catch_weight} / \code{sample_weight}.
+Numbers for each \code{year} and \code{age} are summed.
+Weighted proportions by \code{year} and \code{age} are produced.
 }
