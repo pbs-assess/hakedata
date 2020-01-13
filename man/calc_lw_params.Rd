@@ -2,8 +2,8 @@
 % Please edit documentation in R/get-age-data.R
 \name{calc_lw_params}
 \alias{calc_lw_params}
-\title{Calculate the length-weight relationship parameters for the data with both length and weight, on a
-specimen-by-specime basis}
+\title{Calculate the length-weight relationship parameters for the data with both length and weight,
+given a grouping variable}
 \usage{
 calc_lw_params(
   d,
@@ -30,6 +30,6 @@ The original data frame with the columns \code{lw_alpha} and \code{lw_beta} adde
 exist, they will be overwritten with NAs and values calculated where data exist
 }
 \description{
-Calculate the length-weight relationship parameters for the data with both length and weight, on a
-specimen-by-specime basis
+Calculate the length-weight relationship parameters for the data with both length and weight,
+given a grouping variable
 }

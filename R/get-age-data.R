@@ -45,8 +45,8 @@ fit_lw <- function(d,
   coefficients(fit)
 }
 
-#' Calculate the length-weight relationship parameters for the data with both length and weight, on a
-#' specimen-by-specime basis
+#' Calculate the length-weight relationship parameters for the data with both length and weight,
+#' given a grouping variable
 #'
 #' @param d The data frame as extracted using [fetch_sample_data()]
 #' @param grouping_col A character string matching the name of the column you want to group for
@@ -108,57 +108,34 @@ get_age_props <- function(min_date = as.Date("1972-01-01"),
     mutate(trip_start_date = as.Date(trip_start_date)) %>%
     filter(trip_start_date >= min_date)
 
-  #all_yrs_lw <- fit_lw(d, lw_tol, lw_maxiter)
-
   # The total catch by year
   # ct_yr <- d %>%
   #   group_by(year) %>%
   #   summarize(catch_weight = sum(catch_weight))
 
-  ds <- calc_lw_params(d, "sample_id", lw_cutoff, lw_tol, lw_maxiter)
-  dy <- calc_lw_params(ds, "year", lw_cutoff, lw_tol, lw_maxiter)
-browser()
-  d_nonna_lw <- d %>%
-    filter(!(is.na(length) | is.na(weight)))
+  # The following estimates the LW params for sample IDs with enough (lw_cutoff) lengths,
+  # followed by year if not enough, followwd by whole time series for the remainder. Once this
+  # call is done, the lw_alpha and lw_beta columns will be fully populated for every specimen (no NAs)
+  all_yrs_lw <- fit_lw(d, lw_tol, lw_maxiter)
+  ds <- d %>%
+    calc_lw_params("sample_id", lw_cutoff, lw_tol, lw_maxiter) %>%
+    calc_lw_params("year", lw_cutoff, lw_tol, lw_maxiter) %>%
+    rename(lw_alpha.x = lw_alpha,
+           lw_beta.x = lw_beta) %>%
+    mutate(lw_alpha.y = all_yrs_lw[1],
+           lw_beta.y = all_yrs_lw[2]) %>%
+    mutate(lw_alpha = coalesce(lw_alpha.x, lw_alpha.y),
+           lw_beta = coalesce(lw_beta.x, lw_beta.y)) %>%
+    select(-c(lw_alpha.x, lw_alpha.y, lw_beta.x, lw_beta.y))
 
-
-  samp_based_lw_df <- d_nonna_lw %>%
-    group_by(year, sample_id) %>%
-    tally(name = "num_lw") %>%
-    filter(num_lw >= lw_cutoff) %>%
-    ungroup()
-
-  # Make a vector of sample IDs that can have their own LW relationship estimated based on the `lw_cutoff`
-  samp_based_lw_vec <- samp_based_lw_df %>%
-    pull(sample_id)
-
-  # Do the LW model fit for the above sample_ids and add those as columns
-  samp_lw_coefs <- d_nonna_lw %>%
-    filter(sample_id %in% samp_based_lw_vec) %>%
-    group_by(year, sample_id) %>%
-    group_map(~ fit_lw(.x, lw_tol, lw_maxiter)) %>%
-    set_names(1:length(.)) %>%
-    map_dfr(~ as.data.frame(as.list(.x))) %>%
-    cbind(sample_id = samp_based_lw_vec)
-
-  xx <- d %>%
-    filter(sample_id %in% samp_based_lw_vec)
+  # Now, calculate the weights from length for all missing weights, using speimen-specific LW params
+  ds <- ds %>%
+    mutate(weight = ifelse(is.na(weight),
+                           lw_alpha * length ^ lw_beta,
+                           weight)) %>%
+    filter(!is.na(weight))
   browser()
-  samp <- calc_lw(xx)
 
-
-  samp_based_lw_df <- samp_based_lw_df %>%
-    bind_cols(samp_lw_coefs) %>%
-    select(-c(year, num_lw))
-
-  d_all <- d %>%
-    left_join(samp_based_lw_df, by = "sample_id")
-
-  # For all records with a length and weight but no a and b for LW relationship, use entire time series estimates
-  # d_all <- d_all %>%
-  #   mutate(a = ifelse(!(is.na(length) | is.na(weight)) & is.na(a) & is.na(b), all_yrs_lw[1], a),
-  #          b = ifelse(!(is.na(length) | is.na(weight)) & is.na(a) & is.na(b), all_yrs_lw[1], b))
-browser()
   d_all <- d_all %>% filter(sample_id  %in% c(66357, 67173))
 }
 
