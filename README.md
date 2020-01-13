@@ -61,16 +61,21 @@ spct_all <- conv_spatial(spct_ft, spct_ss, spct_jv)
 
 # Loading sample data into variables
 
-To create age proportions, first a summary of the data is looked at and some decisions made about how to weight them are made.
-
+To create weighted age proportions, a summary of the data was looked at:
 ```
 ss <- sample_summary()
-ss[[1]]
-ss[[2]]
 ```
 
-`ss[[1]]` contains a summary dataframe of the various biological data by year. The `sample_weight`s are mostly zeroes, except for several years. For the years that are zero, the sample weight is calculated by summing the individual specimen weights for the given sample when they exist. If they do not exist, they are calulated using a length-weight relationship. The length-weight relationiship parameters are calculated by sample when enough specimens exist within the sample to do this calculation.
+```ss[[1]]``` contains a summary dataframe of the various biological data by ```year```.
 
-There are plenty of lengths of individual specimens per year, so once the above has been done, the parameters for the length-weight relationship are estimated by year for years in which there are specimen weight data. For the years in which there are no specimen weight data, time-series-based estimated length-weight parameters are used.
+```ss[[2]]``` contains a summary dataframe of the various biological data by ```year``` and ```sample_id```.
+
+Overall (all sectors) age proportions are extracted like this:
+```
+ap <- get_age_props()
+```
+See the R help ```?get_age_props``` for the algorithm details.
+
+
 
 
