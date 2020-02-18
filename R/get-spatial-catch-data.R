@@ -81,6 +81,7 @@ fetch_spatial_catch_data <- function(type, overwrite_file = FALSE){
   }else{
     stop("type must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
   }
+
   if(overwrite_file || !file.exists(file)){
     sql <- inject_fishery_filter(read_sql(spatial_catch_sql_file), type)
     d <- mutate(as_tibble(run_sql("GFFOS", sql)), fishery = type)
@@ -103,6 +104,7 @@ fetch_spatial_catch_data <- function(type, overwrite_file = FALSE){
 conv_spatial <- function(...){
   dfs <- list(...)
   lapply(seq_len(length(dfs)), function(x){
+    browser()
     if(!"X" %in% names(dfs[[x]]) || !"Y" %in% names(dfs[[x]])){
       stop("Data frame ", x, " does not have columns named 'X' and 'Y'.",
            call. = FALSE)

@@ -74,6 +74,24 @@ Overall (all sectors) age proportions are extracted like this:
 ```
 ap <- get_age_props()
 ```
+
+To get Freezer trawler age proportions:
+```
+d <- readRDS(here("data", sample_data_raw_file))
+ap_ft <- get_age_props(d %>% filter(vessel_id %in% freezer_trawlers$GFBIO.ID))
+```
+To get Shoreside age proportions:
+```
+d <- readRDS(here("data", sample_data_raw_file))
+ap_ft <- get_age_props(d %>% filter(!vessel_id %in% freezer_trawlers$GFBIO.ID))
+```
+
+To get Joint Venture age proportions:
+```
+d <- readRDS(here("data", sample_data_raw_file))
+ap_ft <- get_age_props(d[grepl("J-V", d$trip_sub_type_desc),])
+```
+
 See the R help ```?get_age_props``` for the algorithm details.
 
 

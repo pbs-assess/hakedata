@@ -49,7 +49,7 @@ fit_lw <- function(d,
 #' given a grouping variable
 #'
 #' @param d The data frame as extracted using [fetch_sample_data()]
-#' @param grouping_col A character string matching the name of the column you want to group for
+#' @param grouping_cols A vector of character strings matching the names of the columns you want to group for
 #' @param lw_cutoff How many length-weight records are required per sample to use the
 #' length-weight model for that sample. If less than this, the overall yearly values will be used
 #' @param lw_tol See [fit_lw()]
@@ -61,21 +61,21 @@ fit_lw <- function(d,
 #' @importFrom dplyr group_map left_join sym coalesce
 #' @importFrom purrr set_names
 calc_lw_params <- function(d,
-                           grouping_col = "year",
+                           grouping_cols = "year",
                            lw_cutoff = 10,
                            lw_tol = 0.1,
                            lw_maxiter = 1000){
   coalesce_after <- ifelse("lw_alpha" %in% names(d), TRUE, FALSE)
+
   x <- d %>%
-    group_by(!! sym(grouping_col)) %>%
+    group_by_at(vars(one_of(grouping_cols))) %>%
     group_map(~ fit_lw(.x, lw_tol, lw_maxiter)) %>%
     set_names(1:length(.))
-
+browser()
   y <- do.call(rbind, x)
-  y <- cbind(unique(d[[grouping_col]]), y) %>%
+  y <- cbind(unique(d %>% select(grouping_cols)), y) %>%
     as_tibble()
-  names(y)[1] <- grouping_col
-  out <- left_join(d, y, by = grouping_col)
+  out <- left_join(d, y, by = grouping_cols)
   if(coalesce_after){
     out <- out %>% mutate(lw_alpha = coalesce(lw_alpha.x, lw_alpha.y),
                           lw_beta = coalesce(lw_beta.x, lw_beta.y)) %>%
@@ -115,30 +115,43 @@ calc_lw_params <- function(d,
 #' @param lw_cutoff How many length-weight records are required to estimate a length/weight model
 #' @param lw_tol See [fit_lw()]
 #' @param lw_maxiter See [fit_lw()]
+#' @param by_month Logical. If TRUE the return dataframe with have a `month` column
 #'
-#' @return Age proportion dataframe
+#' @return Age proportion dataframe with ages as columns and years as rows
 #' @export
-#' @importFrom dplyr first
+#' @importFrom dplyr first group_by_at vars one_of
 #' @importFrom reshape2 dcast
+#' @importFrom lubridate month
 get_age_props <- function(d = readRDS(here("data", sample_data_raw_file)),
                           min_date = as.Date("1972-01-01"),
                           plus_grp = 15,
                           lw_cutoff = 10,
                           lw_tol = 0.1,
-                          lw_maxiter = 1000){
+                          lw_maxiter = 1000,
+                          by_month = FALSE){
+
+  temporal_grouping <- if(by_month) c("year", "month") else "year"
 
   d <- d %>%
     filter(!is.na(age)) %>%
     mutate(age = ifelse(age > plus_grp, plus_grp, age)) %>%
     mutate(trip_start_date = as.Date(trip_start_date)) %>%
-    filter(trip_start_date >= min_date) %>%
-    select(year, sample_id, length, weight, age, sample_weight, catch_weight)
+    filter(trip_start_date >= min_date)
+
+  if(by_month){
+    d <- d %>%
+      mutate(month = month(trip_start_date)) %>%
+      select(year, month, sample_id, length, weight, age, sample_weight, catch_weight)
+  }else{
+    d <- d %>%
+      select(year, sample_id, length, weight, age, sample_weight, catch_weight)
+  }
 
   # LW paramater estimation
   all_yrs_lw <- fit_lw(d, lw_tol, lw_maxiter)
   ds <- d %>%
     calc_lw_params("sample_id", lw_cutoff, lw_tol, lw_maxiter) %>%
-    calc_lw_params("year", lw_cutoff, lw_tol, lw_maxiter) %>%
+    calc_lw_params(temporal_grouping, lw_cutoff, lw_tol, lw_maxiter) %>%
     rename(lw_alpha.x = lw_alpha,
            lw_beta.x = lw_beta) %>%
     mutate(lw_alpha.y = all_yrs_lw[1],

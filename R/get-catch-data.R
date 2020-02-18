@@ -21,6 +21,24 @@ fetch_catch_data <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
   }
 }
 
+#' Loads spatial catch data from RDS files found in the data directory
+#'
+#' @return The tibble with the data for the fishery given
+#' @export
+#'
+#' @examples
+load_spatial_catch_data <- function(fishery = "ft"){
+  if(fishery == "ft"){
+    return(readRDS(here("data-cache", hake_catch_ft_file)))
+  }else if(fishery == "ss"){
+    return(readRDS(here("data-cache", hake_catch_ss_file)))
+  }else if(fishery == "jv"){
+    return(readRDS(here("data-cache", hake_catch_jv_file)))
+  }else{
+    stop("fishery must be one of 'ft', 'ss', or 'jv'", call. = FALSE)
+  }
+}
+
 #' Loads data from RDS files found in the data directory
 #'
 #' @param min_date Earliest date to include in the data returned

@@ -10,7 +10,8 @@ get_age_props(
   plus_grp = 15,
   lw_cutoff = 10,
   lw_tol = 0.1,
-  lw_maxiter = 1000
+  lw_maxiter = 1000,
+  by_month = FALSE
 )
 }
 \arguments{
@@ -25,9 +26,11 @@ get_age_props(
 \item{lw_tol}{See \code{\link[=fit_lw]{fit_lw()}}}
 
 \item{lw_maxiter}{See \code{\link[=fit_lw]{fit_lw()}}}
+
+\item{by_month}{Logical. If TRUE the return dataframe with have a \code{month} column}
 }
 \value{
-Age proportion dataframe
+Age proportion dataframe with ages as columns and years as rows
 }
 \description{
 Calculate the weighted age proportions for the input data
