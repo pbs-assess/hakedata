@@ -17,6 +17,8 @@ fetch_sample_data <- function(overwrite = FALSE){
              major_stat_area_code == "09" |
              (major_stat_area_code == "01" & minor_stat_area_code == "20"))
     saveRDS(d, here("data", sample_data_raw_file))
+  }else{
+    message("The database query was not run because the file '", here("data", sample_data_raw_file), "' exists and you didn't set overwrite = TRUE")
   }
 }
 
