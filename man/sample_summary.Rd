@@ -4,10 +4,16 @@
 \alias{sample_summary}
 \title{Summarize the numbers of lengths, weights, ages, sample_weights, and catch_weights in the sample data}
 \usage{
-sample_summary(d = readRDS(here("data", sample_data_raw_file)))
+sample_summary(
+  d = readRDS(here("data", sample_data_raw_file)),
+  vessel_filter = NULL
+)
 }
 \arguments{
 \item{d}{A dataframe as extracted using \code{\link[=fetch_sample_data]{fetch_sample_data()}}}
+
+\item{vessel_filter}{If NULL, no filter. If "ft", then freezer trawlers as defined in this package. If "ss",
+then Shoreside vessels as defined in this package}
 }
 \value{
 A list of two dataframes, the first summarized by year and the second sampled by sample_id and year

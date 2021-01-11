@@ -59,7 +59,7 @@ make_grid <- function(d,
   # Only allow points found within grid cells
   d <- d[wth_tf, ]
   # Convert from 'Sparse geometry binary predicate (sgbp)' object to tibble
-  wth_tbl <- as_tibble(wth)
+  wth_tbl <- wth %>% as.data.frame() %>% as_tibble()
   d <- d %>%
     mutate(cell = wth_tbl$col.id)
   # Compute number of fishing events and join them into the main table

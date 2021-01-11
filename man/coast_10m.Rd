@@ -5,7 +5,9 @@
 \alias{coast_10m}
 \title{An sf LINESTRING object which contains data for 10m resolution for the world coastline. Data source:
 #' http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/physical/ne_10m_coastline.zip}
-\format{An sf LINESTRING object}
+\format{
+An sf LINESTRING object
+}
 \usage{
 coast_10m
 }

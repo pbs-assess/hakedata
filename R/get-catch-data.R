@@ -25,8 +25,6 @@ fetch_catch_data <- function(end_date = format(Sys.Date(), "%d/%m/%Y"),
 #'
 #' @return The tibble with the data for the fishery given
 #' @export
-#'
-#' @examples
 load_spatial_catch_data <- function(fishery = "ft"){
   if(fishery == "ft"){
     return(readRDS(here("data-cache", hake_catch_ft_file)))

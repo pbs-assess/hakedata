@@ -4,7 +4,9 @@
 \name{logs_pattern}
 \alias{logs_pattern}
 \title{Pattern for regular expressions to use for LOGS data files}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 logs_pattern
 }

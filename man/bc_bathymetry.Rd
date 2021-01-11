@@ -4,7 +4,9 @@
 \name{bc_bathymetry}
 \alias{bc_bathymetry}
 \title{A list of length-3 lists containing points which can be used to generate contour lines on the BC coast}
-\format{A list}
+\format{
+A list
+}
 \usage{
 bc_bathymetry
 }

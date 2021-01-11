@@ -4,7 +4,9 @@
 \name{species_name}
 \alias{species_name}
 \title{Name of the species}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 species_name
 }

@@ -4,12 +4,14 @@
 \name{freezer_trawlers}
 \alias{freezer_trawlers}
 \title{Data frame with the freexer trawler names and unique IDs by database}
-\format{A data frame:
+\format{
+A data frame:
 \describe{
 \item{Vessel}{vessel name}
 \item{FOS.ID}{Unique ID value in the FOS database}
 \item{GFBIO.ID}{Unique ID value in the GFBIO database}
-}}
+}
+}
 \usage{
 freezer_trawlers
 }

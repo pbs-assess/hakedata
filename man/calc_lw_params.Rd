@@ -7,7 +7,7 @@ given a grouping variable}
 \usage{
 calc_lw_params(
   d,
-  grouping_col = "year",
+  grouping_cols = "year",
   lw_cutoff = 10,
   lw_tol = 0.1,
   lw_maxiter = 1000
@@ -16,7 +16,7 @@ calc_lw_params(
 \arguments{
 \item{d}{The data frame as extracted using \code{\link[=fetch_sample_data]{fetch_sample_data()}}}
 
-\item{grouping_col}{A character string matching the name of the column you want to group for}
+\item{grouping_cols}{A vector of character strings matching the names of the columns you want to group for}
 
 \item{lw_cutoff}{How many length-weight records are required per sample to use the
 length-weight model for that sample. If less than this, the overall yearly values will be used}

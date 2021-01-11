@@ -4,24 +4,18 @@
 #' @param overwrite Logical. Overwrite the RDS file for sample data if it exists
 #'
 #' @export
-#' @importFrom gfdata get_commercial_samples
+#' @importFrom readr read_csv
+#' @importFrom magrittr %<>%
+#' @importFrom tibble enframe
 fetch_sample_data <- function(overwrite = FALSE){
-  if(overwrite || !file.exists(here("data", sample_data_raw_file))){
-    d <- get_commercial_samples(225) %>%
-      filter(major_stat_area_code == "03" |
-             major_stat_area_code == "04" |
-             major_stat_area_code == "05" |
-             major_stat_area_code == "06" |
-             major_stat_area_code == "07" |
-             major_stat_area_code == "08" |
-             major_stat_area_code == "09" |
-             (major_stat_area_code == "01" & minor_stat_area_code == "20"))
-    saveRDS(d, here("data", sample_data_raw_file))
-  }else{
-    message("The database query was not run because the file '",
-            here("data", sample_data_raw_file), "'
-            exists and you didn't set overwrite = TRUE")
-  }
+  d <- read_csv(here("data", "hake_domestic_obs_len_wt_age.csv"))
+  names(d) %<>% tolower
+  nm <- names(d)
+  nm <- gsub("length_cm", "length", nm)
+  nm <- gsub("weight_g", "weight", nm)
+  nm <- gsub("specimen_age", "age", nm)
+  names(d) <- nm
+  saveRDS(d, here("data", sample_data_raw_file))
 }
 
 #' Fit a length-weight model
@@ -75,7 +69,7 @@ calc_lw_params <- function(d,
     group_by_at(vars(one_of(grouping_cols))) %>%
     group_map(~ fit_lw(.x, lw_tol, lw_maxiter)) %>%
     set_names(1:length(.))
-browser()
+#browser()
   y <- do.call(rbind, x)
   y <- cbind(unique(d %>% select(grouping_cols)), y) %>%
     as_tibble()
@@ -213,10 +207,27 @@ get_age_props <- function(d = readRDS(here("data", sample_data_raw_file)),
 #' Summarize the numbers of lengths, weights, ages, sample_weights, and catch_weights in the sample data
 #'
 #' @param d A dataframe as extracted using [fetch_sample_data()]
+#' @param vessel_filter If NULL, no filter. If "ft", then freezer trawlers as defined in this package. If "ss",
+#' then Shoreside vessels as defined in this package
 #'
 #' @return A list of two dataframes, the first summarized by year and the second sampled by sample_id and year
 #' @export
-sample_summary <- function(d = readRDS(here("data", sample_data_raw_file))){
+#' @importFrom dplyr n_distinct
+sample_summary <- function(d = readRDS(here("data", sample_data_raw_file)), vessel_filter = NULL){
+  if(!is.null(vessel_filter)){
+    if(vessel_filter == "ft"){
+      d <- d %>%
+        filter(vessel_id %in% freezer_trawlers$GFBIO.ID)
+    }else if(vessel_filter == "ss"){
+      d <- d %>%
+        filter(!vessel_id %in% freezer_trawlers$GFBIO.ID)
+    }else{
+      stop("You must choose either 'ft' or 'ss' for vessel_filter",
+           call. = FALSE)
+    }
+  }
+
+  browser()
   d_by_sample_id <- d %>%
     group_by(year, sample_id) %>%
     summarize(ages = sum(!is.na(age)),
@@ -228,7 +239,8 @@ sample_summary <- function(d = readRDS(here("data", sample_data_raw_file))){
               sample_weights = sum(!is.na(sample_weight)),
               na_sample_weights = sum(is.na(sample_weight)),
               catch_weights = sum(!is.na(catch_weight)),
-              na_catch_weights = sum(is.na(catch_weight))) %>%
+              na_catch_weights = sum(is.na(catch_weight)),
+              num_fish = n_distinct(specimen_id)) %>%
     ungroup()
 
   d_by_yr <- d_by_sample_id %>%
@@ -242,7 +254,33 @@ sample_summary <- function(d = readRDS(here("data", sample_data_raw_file))){
               sample_weights = sum(sample_weights),
               na_sample_weights = sum(na_sample_weights),
               catch_weights = sum(catch_weights),
-              na_catch_weights = sum(na_catch_weights)) %>%
+              na_catch_weights = sum(na_catch_weights),
+              num_fish = sum(num_fish)) %>%
     ungroup()
-  list(d_by_yr, d)
+  list(d_by_yr, d_by_sample_id)
 }
+
+age_sample_summary <- function(d = readRDS(here("data", sample_data_raw_file)), vessel_filter = NULL){
+
+  if(!is.null(vessel_filter)){
+    if(vessel_filter == "ft"){
+      d <- d %>%
+        filter(vessel_id %in% freezer_trawlers$GFBIO.ID)
+    }else if(vessel_filter == "ss"){
+      d <- d %>%
+        filter(!vessel_id %in% freezer_trawlers$GFBIO.ID)
+    }else{
+      stop("You must choose either 'ft' or 'ss' for vessel_filter",
+           call. = FALSE)
+    }
+  }
+  d %<>%
+    filter(!is.na(age)) %>%
+    group_by(year) %>%
+    summarize(num_samples = n_distinct(sample_id),
+              num_fish = n_distinct(specimen_id)) %>%
+    ungroup()
+
+  d
+}
+

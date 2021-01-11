@@ -4,7 +4,9 @@
 \name{sample_data_raw_file}
 \alias{sample_data_raw_file}
 \title{Name of the commerical samples rds file}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 sample_data_raw_file
 }

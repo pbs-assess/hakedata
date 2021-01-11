@@ -12,6 +12,7 @@ globalVariables(c(
   "CONVWT",
   "Date",
   "dmp_catch_data_raw_file",
+  "survey_data_file",
   "dmp_catch_sql_file",
   "far_point",
   "fdep",

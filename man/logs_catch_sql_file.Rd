@@ -4,7 +4,9 @@
 \name{logs_catch_sql_file}
 \alias{logs_catch_sql_file}
 \title{Name of the LOGS catch SQL file}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 logs_catch_sql_file
 }

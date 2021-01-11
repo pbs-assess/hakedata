@@ -6,6 +6,7 @@ species_name <- "pacific hake"
 spatial_catch_sql_file <- "spatial-catch.sql"
 dmp_catch_sql_file <- "dmp-catch-stored-proc.sql"
 dmp_catch_data_raw_file <- "dmp-catch-data.rds"
+survey_data_file <- "survey-data.rds"
 logs_catch_sql_file <- "logs-catch-stored-proc.sql"
 logs_catch_data_raw_file <- "logs-catch-data.rds"
 sample_data_raw_file <- "sample-data.rds"
@@ -22,16 +23,22 @@ freezer_trawlers <-
                             "Northern Alliance",
                             "Osprey #1",
                             "Raw Spirit",
+                            "Pacific Legacy #1",
+                            "Sunderoey",
                             "Viking Alliance"),
                  FOS.ID = c(310913,
                             312275,
                             310988,
                             312405,
+                            313334,
+                            313464,
                             313224),
                  GFBIO.ID = c(568,
                               592,
                               569,
                               595,
+                              608,
+                              NA,
                               1727))
 
 
@@ -44,6 +51,7 @@ usethis::use_data(spatial_catch_sql_file, overwrite = TRUE)
 usethis::use_data(dmp_catch_sql_file, overwrite = TRUE)
 usethis::use_data(dmp_catch_data_raw_file, overwrite = TRUE)
 usethis::use_data(sample_data_raw_file, overwrite = TRUE)
+usethis::use_data(survey_data_file, overwrite = TRUE)
 usethis::use_data(logs_catch_sql_file, overwrite = TRUE)
 usethis::use_data(logs_catch_data_raw_file, overwrite = TRUE)
 usethis::use_data(hake_catch_ft_file, overwrite = TRUE)

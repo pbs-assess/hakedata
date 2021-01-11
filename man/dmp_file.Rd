@@ -4,7 +4,9 @@
 \name{dmp_file}
 \alias{dmp_file}
 \title{Constants for the hakedata package}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 dmp_file
 }

@@ -4,7 +4,9 @@
 \name{lbs_to_kilos}
 \alias{lbs_to_kilos}
 \title{Conversion factor from pounds to kilograms}
-\format{A double}
+\format{
+A double
+}
 \usage{
 lbs_to_kilos
 }

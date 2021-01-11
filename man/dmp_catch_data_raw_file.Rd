@@ -4,7 +4,9 @@
 \name{dmp_catch_data_raw_file}
 \alias{dmp_catch_data_raw_file}
 \title{Name of the DMP catch rds file}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 dmp_catch_data_raw_file
 }

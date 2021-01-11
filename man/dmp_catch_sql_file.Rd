@@ -4,7 +4,9 @@
 \name{dmp_catch_sql_file}
 \alias{dmp_catch_sql_file}
 \title{Name of the DMP catch SQL file}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 dmp_catch_sql_file
 }

@@ -20,6 +20,10 @@
 #'
 #' @format A character string
 "sample_data_raw_file"
+#' Name of the survey data rds file
+#'
+#' @format A character string
+"survey_data_file"
 #' Name of the DMP catch rds file
 #'
 #' @format A character string

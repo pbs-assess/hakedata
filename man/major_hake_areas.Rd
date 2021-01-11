@@ -4,7 +4,9 @@
 \name{major_hake_areas}
 \alias{major_hake_areas}
 \title{Major PFMA areas used when assessing hake}
-\format{A character vector}
+\format{
+A character vector
+}
 \usage{
 major_hake_areas
 }

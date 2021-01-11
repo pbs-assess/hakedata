@@ -4,7 +4,9 @@
 \name{spatial_catch_sql_file}
 \alias{spatial_catch_sql_file}
 \title{Name of the spatial catch SQL template file}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 spatial_catch_sql_file
 }

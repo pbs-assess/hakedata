@@ -7,10 +7,14 @@
 plot_depths(
   d,
   plot_type = "hist",
+  depth_type = "bottom",
   fishery_type = NA,
+  depth_max = 1500,
   bin_width = 10,
   xlim = c(NA, NA),
+  ylim = c(NA, NA),
   alpha = 0.6,
+  show_legend = FALSE,
   legend_loc = "inside"
 )
 }
@@ -20,14 +24,21 @@ the variable \code{spatial_catch_sql_file}}
 
 \item{plot_type}{Type of plot, one of 'hist' or 'box'}
 
+\item{depth_type}{Type of depth to plot: 'bottom' or 'gear'.}
+
 \item{fishery_type}{One of NA, 'ft', 'ss', or 'jv'. If NA, all fisheries will be plotted against one another,
 if one of the others, that will be filtered before plotting}
+
+\item{depth_max}{Maximum depth. Remove records with depth greater than this. IF \code{NA},
+no restrictions will be placed on the depth.}
 
 \item{bin_width}{See \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}}
 
 \item{xlim}{Limits for the x-axis. For c(NA, NA), plot will extend to limits of data}
 
 \item{alpha}{Transparency of fill from 0 - 1}
+
+\item{show_legend}{Logical for inclusion of legend}
 
 \item{legend_loc}{Where to place legend "inside" or "outside" the frame of the plot}
 }

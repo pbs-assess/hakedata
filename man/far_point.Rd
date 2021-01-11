@@ -5,7 +5,9 @@
 \alias{far_point}
 \title{An sf class POINT which represents a point at the lower rightmost part of the fishery distribution
 to be used to measure disctance to other point for removal of outlier points}
-\format{An sf POINT object}
+\format{
+An sf POINT object
+}
 \usage{
 far_point
 }

@@ -4,16 +4,20 @@
 #' @param d Output from [load_spatial_catch_data()]
 #' @param type One of "bottom" or "gear" for depth type
 #' @param yrs A vector of years to include. If NULL, all years in the data will be included
+#' @param min_depth_cutoff The depth for which to remove data. In fasthoms. All data shallower than this
+#' will be removed. This applies to both `type` 'bottom' and 'gear'
 #'
 #' @return Invisibly - A tibble containing year and depth record stats
 #' @export
+#' @importFrom dplyr do
 #'
 #' @examples
 #' d_ss <- load_spatial_catch_data("ss")
 #' gear_depth_ss <- get_depth_by_year(d_ss, "gear")
 get_depth_by_year <- function(d,
                               type = "bottom",
-                              yrs = NULL){
+                              yrs = NULL,
+                              min_depth_cutoff = 50 / 1.8288){
   if(type == "bottom"){
     dpth <- d %>% filter(!is.na(bottomdepth_fm)) %>%
       transmute(year = year(catchdate),
@@ -25,6 +29,9 @@ get_depth_by_year <- function(d,
   }else{
     stop("type must be 'bottom' or 'gear'", call. = FALSE)
   }
+  dpth <- dpth %>%
+    filter(depth >= min_depth_cutoff)
+
   dpth <- dpth %>%
     group_by(year) %>%
     do(as.data.frame(t(boxplot.stats(.$depth)$`stats`))) %>%

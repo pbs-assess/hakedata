@@ -104,7 +104,6 @@ fetch_spatial_catch_data <- function(type, overwrite_file = FALSE){
 conv_spatial <- function(...){
   dfs <- list(...)
   lapply(seq_len(length(dfs)), function(x){
-    browser()
     if(!"X" %in% names(dfs[[x]]) || !"Y" %in% names(dfs[[x]])){
       stop("Data frame ", x, " does not have columns named 'X' and 'Y'.",
            call. = FALSE)

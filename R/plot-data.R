@@ -137,7 +137,7 @@ plot_spatial <- function(grd,
     as_tibble()
 
   g <- ggplot(data = world_proj) +
-    geom_sf(color = "royalblue", fill = "antiquewhite")
+    geom_sf(color = "black", fill = "antiquewhite")
 
   # Contour lines
   bc_isob <- contourLines(bc_bathymetry, levels = contour_depths)
@@ -174,6 +174,10 @@ plot_spatial <- function(grd,
 #' @param xlim Limits for the x-axis. For c(NA, NA), plot will extend to limits of data
 #' @param alpha Transparency of fill from 0 - 1
 #' @param legend_loc Where to place legend "inside" or "outside" the frame of the plot
+#' @param depth_type Type of depth to plot: 'bottom' or 'gear'.
+#' @param depth_max Maximum depth. Remove records with depth greater than this. IF `NA`,
+#' no restrictions will be placed on the depth.
+#' @param show_legend Logical for inclusion of legend
 #'
 #' @return A [ggplot2] object
 #' @export
@@ -181,27 +185,39 @@ plot_spatial <- function(grd,
 #' @importFrom ggplot2 aes geom_boxplot geom_histogram xlab ylab guides guide_legend scale_x_continuous geom_vline
 #' @importFrom grid unit
 #' @importFrom stats quantile
+#' @importFrom scales comma
 plot_depths <- function(d,
                         plot_type = "hist",
+                        depth_type = "bottom",
                         fishery_type = NA,
+                        depth_max = 1500,
                         bin_width = 10,
                         xlim = c(NA, NA),
+                        ylim = c(NA, NA),
                         alpha = 0.6,
+                        show_legend = FALSE,
                         legend_loc = "inside"){
   stopifnot(plot_type %in% c("hist", "box"))
+  stopifnot(depth_type %in% c("bottom", "gear"))
+  stopifnot(fishery_type %in% c("ft", "ss", "jv", NA))
+
   if(!is.na(fishery_type)){
-    if(!fishery_type %in% c("ft", "ss", "jv")){
-      stop("`fishery_type` must be one of NA, 'ft', 'ss', or 'jv'", call. = FALSE)
-    }
     d <- d %>%
       filter(fishery %in% fishery_type)
   }
+  depth_type <- paste0(depth_type, "depth_fm")
 
   d <- d %>%
+    rename(fdep = !!depth_type) %>%
     filter(!is.na(fdep)) %>%
     mutate(yr = factor(year(catchdate)),
            fishery = toupper(fishery),
            fdep = fdep * 1.8288) # Convert fathoms to meters
+  if(!is.na(depth_max)){
+    d <- d %>%
+      filter(fdep <= depth_max)
+  }
+
   if(plot_type == "hist"){
     med <- d %>%
       group_by(fishery) %>%
@@ -217,7 +233,8 @@ plot_depths <- function(d,
       geom_vline(data = med, aes(xintercept = fdep, col = fishery), size = 1.25, show.legend = FALSE) +
       geom_vline(data = med, aes(xintercept = low, col = fishery), size = 1.25, linetype = "dashed", show.legend = FALSE) +
       geom_vline(data = med, aes(xintercept = hi, col = fishery), size = 1.252, linetype = "dashed", show.legend = FALSE) +
-      scale_x_continuous(limits = xlim) +
+      scale_x_continuous(limits = xlim, expand = c(0, 0)) +
+      scale_y_continuous(limits = ylim, label = comma, expand = c(0, 0)) +
       xlab("Depth (m)") +
       ylab("Number of tows")
   }else{
@@ -225,18 +242,25 @@ plot_depths <- function(d,
       geom_boxplot(aes(x = yr, y = fdep, fill = fishery),
                    alpha = alpha) +
       xlab("Year") +
-      ylab("Depth (m)")
+      ylab(paste0(ifelse(depth_type = "bottom", "Bottom", "Gear"), " Depth (m)"))
   }
   g <- g +
     scale_fill_manual(values = c("#69b3a2", "#404080")) +
-    scale_color_manual(values = c("#69b3a2", "#404080")) +
-    guides(fill = guide_legend(title = "Fishery")) +
-    theme(legend.justification = c(1, 1),
-          legend.key.height = unit(30, units = "points"))
+    scale_color_manual(values = c("#69b3a2", "#404080"))
 
-  if(legend_loc == "inside"){
+  if(show_legend){
     g <- g +
-      theme(legend.position = c(1, 1))
+      guides(fill = guide_legend(title = "Fishery")) +
+      theme(legend.justification = c(1, 1),
+            legend.key.height = unit(30, units = "points"))
+
+    if(legend_loc == "inside"){
+      g <- g +
+        theme(legend.position = c(1, 1))
+    }
+  }else{
+    g <- g +
+      theme(legend.position="none")
   }
 
   g

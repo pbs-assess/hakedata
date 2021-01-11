@@ -15,5 +15,5 @@ a spatial data frame as described in the \link{sf} package
 \description{
 This function converts all supplied data frames into a single \link{sf} data frame. It also
 removes points found on land or way out of the fishing area. The Fishing IDs (FIDs) for
-this filtration were found using \code{\link[mapview:mapview]{mapview::mapview()}}.
+this filtration were found using \code{\link[mapview:mapView]{mapview::mapview()}}.
 }

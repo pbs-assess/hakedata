@@ -4,7 +4,9 @@
 \name{hake_catch_ss_file}
 \alias{hake_catch_ss_file}
 \title{Name of the shoreside catch rds file}
-\format{A character string}
+\format{
+A character string
+}
 \usage{
 hake_catch_ss_file
 }
